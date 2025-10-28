@@ -1,18 +1,3 @@
-# Reference Architecture Design Brief: "EduVerse Reference Model"
-
-## Objective
-
-* **Title:** Design Brief: EduVerse - A Reference Business Architecture for a Modern University.
-* **Objective:** Develop a reference business architecture to serve as a common language for modern, research-intensive universities. The architecture must support strategic discussions on digitalisation of education, attracting international talent, and valorisation of research.
-
-## Core Strategic Goals
-
-The reference architecture must enable a university to successfully pursue the following core strategic goals:
-
-* **SG1: Student Lifecycle Management:** To provide a seamless and enriching experience for students throughout their entire academic journey. This includes the initial recruitment and application process, course enrolment, the delivery of education, examination and grading, and finally, graduation and alumni relations.
-* **SG2: Research Excellence and Impact:** To create a thriving environment for groundbreaking research and ensure its value is shared with society. This includes acquiring research funding, facilitating the research process for academic staff, managing research data, and valorising research outcomes through publications and partnerships.
-* **SG3: Lifelong Learning & Societal Valorisation:** To provide continuing education for professionals and to valorise academic knowledge through societal partnerships and public engagement. This includes executive education, professional development courses, public lectures, and contract research for external partners.
-
 ## Core Modeling Philosophy: The HOW-WHAT-WHY Triad
 
 To ensure a coherent and meaningful model, you must base your entire design on the following architectural triad. This logic is the primary driver for all structural choices.
@@ -24,6 +9,20 @@ To ensure a coherent and meaningful model, you must base your entire design on t
   * **Guiding Principle (The Single Instance Principle):** A value stream must represent the end-to-end flow of a **single case or instance** from an initial **trigger** to a final **outcome**. All stages within the stream must be activities that happen *during the journey of that one instance*.
     * **Crucial Distinction:** This separates operational value streams (which execute repeatedly for each case) from **enabling** value streams (which design or prepare the capabilities needed for operation). Mixing these is a modeling error.
     * **Example:** An 'Order-to-Cash' value stream is triggered by a 'Customer Order' and ends with 'Payment Received'. The stages are `Process Order`, `Ship Product`, `Issue Invoice`. The activity `Design Product` is not part of this stream; it belongs in a separate, enabling 'Idea-to-Product' stream.
+  * **Guiding Principle (The Value-Verb Naming Convention for Processes):** To ensure the model consistently separates purpose (`WHY`) from ability (`HOW`), all `BusinessProcess` elements, at every level of the hierarchy (`L0`, `L1`, and `L2`), must adhere to the following naming convention.
+    * **Core Rule:** The name must describe a **value-creating transformation** from the stakeholder's perspective. It must be active, outcome-oriented, and start with a strong, value-creating **verb**.
+    * **Formula:** `[Verb]` + `[Object of Transformation]`
+    * **Forbidden Words:** The name must **NOT** be a noun describing an organizational unit or a generic management activity. You must **strictly avoid** words like: `Management`, `Affairs`, `Services`, `Administration`, `Support`, `Operations`, `Lifecycle`, `Realisation`. These words describe capabilities (`HOW`), not value stream stages (`WHY`).
+    * **Generic Multi-Level Example (MANDATORY TO FOLLOW):**
+      * **L0 (Value Stream):**
+        * INCORRECT: `Customer Lifecycle Management`
+        * CORRECT: `Acquire & Serve Customers`
+      * **L1 (Stage):**
+        * INCORRECT: `Sales & Fulfillment Management`
+        * CORRECT: `Convert Prospect to Fulfilled Order`
+      * **L2 (Step):**
+        * INCORRECT: `Order Processing`
+        * CORRECT: `Process Customer Order`
 
 * **WHAT (Business Object):**
  This represents the conceptual, 'real-world' entity **in a specific role** that is being transformed by the value stream. It is the subject of value creation.
@@ -61,39 +60,64 @@ You will generate the architecture following a highly structured, multi-step pro
 
 #### Phase 1: Bottom-Up Definition of All `L2` Elements
 
-1. **Define `L0` down to `L2` Processes:** Create exactly one `L0` `BusinessProcess` (Value Stream) for each of the Core Strategic Goals. Next, generate 2-7 `L1` child processes per Value Stream. And then, generate 2-7 `L2` child processes per `L1` process.
-   * **Crucial Naming Rule:** All `BusinessProcess` elements at the same hierarchical level (e.g., all `L1` stages) must have unique names. If two value streams conceptually have a similar stage, the name must be made more specific. For example, in a manufacturing company, instead of two `L1` stages named `Process Order`, you must use `Process Customer Order` (for the B2C stream) and `Process Bulk Order` (for the B2B stream). This is essential for model clarity and integrity.
+1. **Define `L0` and `L2` Processes:** Define exactly one `L0` `BusinessProcess` (Value Stream) for each of the Core Strategic Goals. Next, generate a comprehensive list of `L2` child processes for these `L0` parents, ensuring a total of **40 to 50** `L2` processes are created across all three `L0` streams. All `BusinessProcess` elements must strictly adhere to the **Value-Verb Naming Convention**. The `L1` process hierarchy is intentionally left undefined at this stage.
+   * **Crucial Naming Rule:** All `BusinessProcess` elements you create must strictly adhere to the **Value-Verb Naming Convention** defined in the Core Modeling Philosophy. Furthermore, all processes at the same hierarchical level must have unique names.
 2. **Define `L2` Primary Objects:** For each `L2` `BusinessProcess`, you will now define its primary `L2` `BusinessObject`. The is the entity that the process seeks to bring into a valuable state.
-3. **Generate `L2` Supporting Objects (Full Inventory):** For each `L2` `[Process, Primary Object]` pair, identify and define any `L2` `Supporting Objects` required to bring the primary object to its desired state.
-4. **Define and Consolidate `L2` Custodial Functions (Capability-Centric Consolidation):** This is the most critical step. You will now define and consolidate the capabilities (`Business Functions`) that act upon the `BusinessObjects`.
+3. **Define and Consolidate `L2` Custodial Functions (Capability-Centric Consolidation):** This is the most critical step. You will now define and consolidate the capabilities (`Business Functions`) that act upon the `BusinessObjects`.
    * **Core Principle (The Reusable Ability):** Analyze the complete list of `L2` `[Process, Primary Object]` pairs. Your goal is to identify the underlying, reusable **ability** (`HOW`) required to perform the transformation.
-   * **Action:** For each required ability, create **one and only one** `L2` `BusinessFunction`. If multiple, different processes (potentially from different value streams) require a set of skills and resources to execute that the organization would likely want to manage as a whole, they must all be served by the **same, single, shared `L2` `BusinessFunction`**.
+   * **Action:** For each required ability, create **one and only one** `L2` `BusinessFunction`. If multiple, different processes from different value streams require a set of skills and resources to execute that the organization would likely want to manage as a whole, they must all be served by the **same, single, shared `L2` `BusinessFunction`**.
    * **Generic Example (MANDATORY TO FOLLOW):**
      * **Context:** You have identified two pairs:
        1. Process: `Issue B2C Invoice`, Primary Object: `Customer Invoice`.
        2. Process: `Issue B2B Invoice`, Primary Object: `Project Invoice`.
      * **Analysis:** The underlying ability to create, validate, and send both types of invoices requires financial knowledge, systems, and legal compliance checks that the organization would typically want to manage as a whole.
      * **CORRECT (Capability Consolidation):** You must create **one single `L2` `BusinessFunction`** named `Invoice Management`. This single function represents the organization's unified capability for all invoicing activities.
-5. **Create All `L2` Relationships:** Now, create all transversal relationships based on the objects and consolidated functions.
-   * For **each** `L2` `BusinessProcess`, create a `ServingRelationship` from the single, consolidated `L2` `BusinessFunction` that provides the required ability.
-   * For **each** consolidated `L2` `BusinessFunction`, create `AccessRelationship`s to **all** the `L2` `BusinessObject`s it is responsible for transforming. (e.g., The single `Invoice Management` function will have two `AccessRelationship`s: one to `Customer Invoice` and one to `Project Invoice`).
-   * **Modeling Inter-Capability Dependencies:** To model how capabilities rely on each other, apply the following rule. For each `L2` `BusinessProcess`:
-      1. Identify the primary `BusinessFunction` that serves this process (`Function A`).
-      2. Identify all Supporting Objects this process requires.
-      3. For each Supporting Object, identify its custodial `BusinessFunction` (`Function B`).
-      4. If `Function A` and `Function B` are not the same, create a `ServingRelationship` from `Function B` to `Function A`. This correctly models that `Function A` requires the services of `Function B` to do its work.
+4. **Identify Dependencies Between Primary Capabilities:** Now, analyze the complete list of `L2` Primary Custodial Functions to map their interdependencies. For each primary function, perform the following analysis:
+   A. **Identify Required Support:** Ask the question: "To perform its task, does this primary function rely on a significant outcome or service produced by **another primary function**?"
+   B. **Focus on Core, Not Generic:** The goal is to identify meaningful, domain-relevant dependencies between core business activities, **not** to define generic utility services.
+    * **Good Example:** A `Sales Order Fulfillment` function requires a service from an `Inventory Management` function to check stock levels. Both are core business capabilities.
+    * **Bad Example (to avoid):** A `Sales Order Fulfillment` function requires 'Document Management'. This is too generic and should not be modeled at this level.
+   C. **Crucial Constraint (No Intra-Stream Support):** A primary `L2` function cannot be identified as supporting another primary `L2` function within the same `L0` value stream.
+   D. **Record Dependencies:** For each valid dependency found, note down the pair of `[Consuming Function, Supporting Function]`. This list will be used to create relationships in the next step.
+5. **Create All `L2` Relationships:** Based on the elements and dependencies defined in steps 1-4, generate the complete set of `L2` relationships.
+   A. **Link Process to Primary Capability (WHY is realized by HOW):** For each `L2` `BusinessProcess`, create a `ServingRelationship` from the `L2` Primary Custodial Function that was identified as its realizer in step 3.
+   B. **Link Capability to its Object (HOW transforms WHAT):** For each `L2` Primary Custodial Function, create an `AccessRelationship` to the `L2` Primary `BusinessObject`(s) it is the custodian of (as defined in steps 2 and 3).
+   C. **Link Dependent Core Capabilities (Primary HOW depends on other Primary HOW):** For every `[Consuming Function, Supporting Function]` pair recorded in step 4, create a `ServingRelationship` from the Supporting `BusinessFunction` (the provider) to the Consuming `BusinessFunction` (the consumer).
+      * **Example:** Based on the analysis in step 4, create a `ServingRelationship` from `Inventory Management` (source) to `Sales Order Fulfillment` (target). This explicitly models that the fulfillment capability requires inventory services to function correctly.
 
 #### Phase 2: Top-Down Structuring of Hierarchies
 
-1. **Structure the `L1` Capability Hierarchy (The Anchor):** Group the `L2` `BusinessFunction`s into `L1` parents based on **business logic** such as shared skills and resources that should be managed as a whole (e.g., group all payment-related functions under 'Financial Transaction Management').
-2. **Structure the `L1` Object Hierarchy (Mirroring):** Group the `L2` `BusinessObjects` into `L1` parents to **exactly mirror** the `L1` capability hierarchy. The name of the `L1` object should describe the entity being owned and managed by the `L1` function.
-3. **Restructure the `L1` Process Hierarchy (Final Alignment):** Discard the original `L1` `BusinessProcess` parents. Create a **new set of `L1` `BusinessProcess` parents** that mirrors the `L1` `BusinessFunction` hierarchy. However, its name must primarily be based on its child processes and the value it creates for the stakeholder. Re-parent the `L2` `BusinessProcesses` under these new `L1` parents.
-4. **Connect to Level 0:** Ensure every `L1` element you have structured in the steps above is correctly linked to its `L0` parent via a `CompositionRelationship`. At this point, the entire element hierarchy from `L0` to `L2` is complete.
-5. **Pre-flight Uniqueness and Parentage Check:** Before proceeding to the next phase, you must perform a final verification of the **complete element hierarchy**.
+1. **Define `L0` Enterprise Anchors for Capabilities and Objects:** Before structuring the `L1` hierarchies, you must first define the single, top-level parents for the capability and object models.
+   * Create exactly **one** `L0` `BusinessFunction`. This element represents the total, unified capability of the organization to perform its mission.
+   * Create exactly **one** `L0` `BusinessObject`. This element represents the single, abstract entity that the organization manages.
+2. **Structure the `L1` Capability Hierarchy (The Anchor):** Group the `L2` `BusinessFunction`s into logical `L1` parents based on shared skills, resources, and business logic (e.g., group all payment-related functions under 'Financial Transaction Management'). These `L1` functions will be the direct children of the single `L0` `BusinessFunction` created in the previous step.
+3. **Structure the `L1` Object Hierarchy (Mirroring):** Group the `L2` `BusinessObject`s into `L1` parents to **exactly mirror** the `L1` capability hierarchy. The name of the `L1` object should describe the entity being owned and managed by the corresponding `L1` function. These `L1` objects will be the direct children of the single `L0` `BusinessObject`.
+   * **Strict Alignment Rule:** The L1 Object hierarchy must not only mirror the L1 Capability hierarchy in name, but also in composition. During the structuring phase, any `AccessRelationship` at `L2` (from `BF-child` to `BO-child`) **may exclusively exist** if the L1 parent of `BF-child` is the designated corresponding parent of the L1 parent of `BO-child`. **Creating cross-hierarchical relationships at the L2 level is strictly forbidden.** This ensures that all `AccessRelationship`s are contained within parallel hierarchical branches, simplifying the subsequent derivation of parent-level relationships.
+4. **Structure the `L1` Process Hierarchy (Mirroring):** Group the `L2` `BusinessProcess`es into `L1` parents to **exactly mirror** the `L1` capability hierarchy. The names of these `L1` processes must be a logical aggregation of their children and must strictly adhere to the **Value-Verb Naming Convention**.
+5. **Connect to Level 0:** Ensure every `L1` element you have structured in the steps above is correctly linked to its `L0` parent via a `CompositionRelationship`.
+   * All `L1` `BusinessProcess`es link to their respective `L0` `BusinessProcess` parent.
+   * All `L1` `BusinessFunction`s link to the **single** `L0` `BusinessFunction` parent.
+   * All `L1` `BusinessObject`s link to the **single** `L0` `BusinessObject` parent.
+6. **Pre-flight Uniqueness and Parentage Check:** Before proceeding to the next phase, you must perform a final verification of the **complete element hierarchy**.
    * **Action:** Scan the full list of elements and their parent-child `CompositionRelationship`s.
    * **Verification 1 (Unique Naming):** Confirm that all `BusinessProcess` elements at the same level (e.g., all `L1` stages across all `L0` streams) have unique names, as instructed in Phase 1.
    * **Verification 2 (Single Parentage):** Confirm that you have strictly adhered to `Rule 1` and that no single element ID has been assigned more than one parent.
    * **Confirmation Statement:** You must explicitly state: **"Verification complete. The full hierarchy is established. All elements have a unique parent, and all same-level stages have unique names."** Only after making this statement can you proceed.
+
+### Phase 3: Derivation, Verification, and Output Generation**
+
+1. **Derive and Verify L1 Access Relationships:**
+   A. Create an empty list for `L1 Access Relationships`.
+   B. Iterate through **every** `AccessRelationship` at `L2`. For each L2 relationship `[Source: BF-L2-child, Target: BO-L2-child]`:
+      i. Identify the `L1` parent of the source (`BF-L1-parent`).
+      ii. Identify the `L1` parent of the target (`BO-L1-parent`).
+      iii. Add the tuple `(BF-L1-parent, BO-L1-parent)` to the list, if it's not already present.
+   C. For every unique tuple in the list, create one `AccessRelationship` in the final model.
+   D. **Verification:** As proof of execution, state the total number of `L2` `AccessRelationship`s found and the total number of unique `L1` `AccessRelationship`s derived. Then, list the specific `L2` relationships that led to the creation of the `AccessRelationship` between `BF-L1-1` and `BO-L1-7` (if present).
+2. **Derive and Verify `L1` Serving Relationships (between Functions):**
+   A. Apply the exact same procedure as in Step 1, but now for all `ServingRelationship`s between `BusinessFunction`s at `L2`.
+3. **Derive and Verify `L0` Relationships:**
+   A. Apply the same procedure again to derive the `L0` relationships from the generated `L1` relationships.
 
 #### Phase 3: Derivation, Verification, and Output Generation
 

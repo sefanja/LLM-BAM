@@ -2,67 +2,136 @@
  * Quick en dirty script om door LLM gegenereerde elementen en relaties geordend op een view (`Import`) te plaatsen.
  */
 
-const OFFSET = 12;
-const XD = 132;
-const YD = 240;
-const H = 48;
-const W = 120;
+const S = 12; // kleinste afstand
+const W = 10*S; // standaard elementbreedte
+const H = 5*S; // en hoogte
+const V = 5*H // grote verticale afstand
+const LABEL = '${property:Code} ${name}';
 
 const view = $("view").filter(".Import").first();
 
-var i = 0; // aantal elementen opschuiven
-var j = 0; // aantal extra spaties
+var leafs = 0; // aantal elementen geplaatst op het diepste niveau
+var spaces = 0; // aantal ruimtes tussen elementen
 $('business-process')
     .filter(el => el.prop('Level') == 0)
-            .each(el => {
-                let L1_elem = $(el).outRels('composition-relationship').size();
-                let L2_elem = $(el).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
-                view.add(el, OFFSET*(1+2*j++) + XD*i, OFFSET, (1+2*L1_elem+L2_elem)*OFFSET + W*L2_elem + 1, 3*H + 1);
-                $(el).objectRefs().first().textPosition = 0;
-                $(el).outRels('composition-relationship').targetEnds().each(elL1 => {
+            .each(elL0 => {
+                let children = $(elL0).outRels('composition-relationship').size();
+                let grandchildren = $(elL0).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
+                view.add(
+                    elL0,
+                    (2*spaces++ + 1)*S + leafs*(W+S),
+                    S,
+                    (1+ 2*children + grandchildren)*S + grandchildren*W,
+                    H + 8*S);
+                let diagramObject = $(elL0).objectRefs().first();
+                diagramObject.textPosition = 0;
+                diagramObject.labelExpression = LABEL;
+                $(elL0).outRels('composition-relationship').targetEnds().each(elL1 => {
                     let children = $(elL1).outRels('composition-relationship').size();
-                    view.add(elL1, OFFSET*(2*j++) + XD*i, OFFSET*(1+3), (1+children)*OFFSET + W*children + 1, 2*H + 1, true);
-                    $(elL1).objectRefs().first().textPosition = 0;
+                    view.add(
+                        elL1,
+                        (2*spaces++)*S + leafs*(W+S),
+                        4*S,
+                        (1 + children)*S + children*W,
+                        H + 4*S,
+                        true);
+                    let diagramObject = $(elL1).objectRefs().first();
+                    diagramObject.textPosition = 0;
+                    diagramObject.labelExpression = LABEL;
                     $(elL1).outRels('composition-relationship').targetEnds().each(elL2 => {
-                        view.add(elL2, OFFSET*(2*j-1) + XD * i++, OFFSET*(1+6), W, H, true);
+                        view.add(
+                            elL2,
+                            (2*spaces - 1)*S + leafs++*(W+S),
+                            7*S,
+                            W+1,
+                            H,
+                            true);
+                        let diagramObject = $(elL2).objectRefs().first();
+                        diagramObject.labelExpression = LABEL;
                     })
                 })
             });
 
-i = 0;
-j = 0;
+leafs = 0;
+spaces = 0;
 $('business-function')
     .filter(el => el.prop('Level') == 0)
-            .each(el => {
-                let L1_elem = $(el).outRels('composition-relationship').size();
-                let L2_elem = $(el).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
-                view.add(el, OFFSET*(1+2*j++) + XD*i, OFFSET + YD, (1+2*L1_elem+L2_elem)*OFFSET + W*L2_elem + 1, 3*H + 1);
-                $(el).objectRefs().first().textPosition = 0;
-                $(el).outRels('composition-relationship').targetEnds().each(elL1 => {
+            .each(elL0 => {
+                let children = $(elL0).outRels('composition-relationship').size();
+                let grandchildren = $(elL0).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
+                view.add(
+                    elL0,
+                    (2*spaces++ + 1)*S + leafs*(W+S),
+                    V + S,
+                    (1+ 2*children + grandchildren)*S + grandchildren*W,
+                    H + 8*S);
+                let diagramObject = $(elL0).objectRefs().first();
+                diagramObject.textPosition = 0;
+                diagramObject.labelExpression = LABEL;
+                $(elL0).outRels('composition-relationship').targetEnds().each(elL1 => {
                     let children = $(elL1).outRels('composition-relationship').size();
-                    view.add(elL1, OFFSET*(2*j++) + XD*i, OFFSET*(1+3) + YD, (1+children)*OFFSET + W*children + 1, 2*H + 1, true);
-                    $(elL1).objectRefs().first().textPosition = 0;
+                    view.add(
+                        elL1,
+                        (2*spaces++)*S + leafs*(W+S),
+                        V + 4*S,
+                        (1 + children)*S + children*W,
+                        H + 4*S,
+                        true);
+                    let diagramObject = $(elL1).objectRefs().first();
+                    diagramObject.textPosition = 0;
+                    diagramObject.labelExpression = LABEL;
                     $(elL1).outRels('composition-relationship').targetEnds().each(elL2 => {
-                        view.add(elL2, OFFSET*(2*j-1) + XD * i++, OFFSET*(1+6) + YD, W, H, true);
+                        view.add(
+                            elL2,
+                            (2*spaces - 1)*S + leafs++*(W+S),
+                            V + 7*S,
+                            W+1,
+                            H,
+                            true);
+                        let diagramObject = $(elL2).objectRefs().first();
+                        diagramObject.labelExpression = LABEL;
                     })
                 })
             });
 
-i = 0;
-j = 0;
+leafs = 0;
+spaces = 0;
 $('business-object')
     .filter(el => el.prop('Level') == 0)
-            .each(el => {
-                let L1_elem = $(el).outRels('composition-relationship').size();
-                let L2_elem = $(el).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
-                view.add(el, OFFSET*(1+2*j++) + XD*i, OFFSET + YD*2, (1+2*L1_elem+L2_elem)*OFFSET + W*L2_elem + 1, 3*H + 1);
-                $(el).objectRefs().first().textPosition = 0;
-                $(el).outRels('composition-relationship').targetEnds().each(elL1 => {
+            .each(elL0 => {
+                let children = $(elL0).outRels('composition-relationship').size();
+                let grandchildren = $(elL0).outRels('composition-relationship').targetEnds().outRels('composition-relationship').size();
+                view.add(
+                    elL0,
+                    (2*spaces++ + 1)*S + leafs*(W+S),
+                    2*V + S,
+                    (1+ 2*children + grandchildren)*S + grandchildren*W,
+                    H + 8*S);
+                let diagramObject = $(elL0).objectRefs().first();
+                diagramObject.textPosition = 0;
+                diagramObject.labelExpression = LABEL;
+                $(elL0).outRels('composition-relationship').targetEnds().each(elL1 => {
                     let children = $(elL1).outRels('composition-relationship').size();
-                    view.add(elL1, OFFSET*(2*j++) + XD*i, OFFSET*(1+3) + YD*2, (1+children)*OFFSET + W*children + 1, 2*H + 1, true);
-                    $(elL1).objectRefs().first().textPosition = 0;
+                    view.add(
+                        elL1,
+                        (2*spaces++)*S + leafs*(W+S),
+                        2*V + 4*S,
+                        (1 + children)*S + children*W,
+                        H + 4*S,
+                        true);
+                    let diagramObject = $(elL1).objectRefs().first();
+                    diagramObject.textPosition = 0;
+                    diagramObject.labelExpression = LABEL;
                     $(elL1).outRels('composition-relationship').targetEnds().each(elL2 => {
-                        view.add(elL2, OFFSET*(2*j-1) + XD * i++, OFFSET*(1+6) + YD*2, W, H, true);
+                        view.add(
+                            elL2,
+                            (2*spaces - 1)*S + leafs++*(W+S),
+                            2*V + 7*S,
+                            W+1,
+                            H,
+                            true);
+                        let diagramObject = $(elL2).objectRefs().first();
+                        diagramObject.labelExpression = LABEL;
                     })
                 })
             });
