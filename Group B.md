@@ -6,6 +6,22 @@
 
 **Guiding Principle:** You will first deconstruct value streams to discover a set of primary capabilities. You will then enrich this set with purely supporting, domain-specific capabilities. This complete, canonical set will form the structural "anchor" for the entire model.
 
+**Guiding Principle: The "Business Reality" Rule:** This entire model must adhere to a strict "Business Reality" rule. All elements (`BusinessFunction`, `BusinessProcess`, `BusinessObject`) must represent the tangible and conceptual reality of the business, not its administrative, informational, or systemic representations. The model describes **what the business does and acts upon**, not how it is recorded.
+
+* **For `BusinessObject`s:** Name the real-world entity, not its data record.
+  * **Correct:** `Customer`, `Product`, `Shipment`, `Agreement`.
+  * **Incorrect:** `Customer Record`, `Product Specification`, `Shipment Manifest`, `Agreement Document`.
+
+* **For `BusinessProcess`es:** Name the value-creating activity that transforms a real-world object, not the paperwork associated with it.
+  * **Correct:** `Onboard Customer`, `Develop Product`, `Dispatch Shipment`.
+  * **Incorrect:** `Complete Registration Form`, `Finalize Specification Document`, `Print Shipping Label`.
+
+* **For `BusinessFunction`s (Capabilities):** Name the business ability, not the management of an administrative artifact.
+  * **Correct:** `Client Relationship Management`, `Product Lifecycle Management`, `Logistics Coordination`.
+  * **Incorrect:** `CRM System Management`, `Document Version Control`, `Order Database Administration`.
+
+This principle is foundational and must be applied consistently throughout all steps of the generation process.
+
 ---
 
 ### Step 1: Deconstruct Value Streams into Atomic Process Steps and Objects (The WHY & WHAT)
@@ -18,7 +34,7 @@
 
 ### Step 2: Discover the Complete Set of Core L2 Capabilities (The HOW)
 
-**2a. Discover Primary Capabilities:** Analyze the list from Step 1 and derive the unique, consolidated set of L2 `BusinessFunction`s that **primarily realize** these process steps.
+**2a. Discover Primary Capabilities:** Analyze the list from Step 1. For each process step, derive the specific L2 `BusinessFunction` that represents the core business competency required to govern the transformation of its primary business object.
 **2b. Discover Purely Supporting Capabilities:** Analyze the Primary set and identify new, **purely supporting, domain-specific** L2 `BusinessFunction`s essential for the primary capabilities to function.
 **2c. Create the Canonical Set:** Combine both sets into one complete list of core capabilities. Map each Primary Capability back to the processes it realizes and the objects it has "custodianship" over.
 
@@ -28,7 +44,7 @@
 
 1. Take the **complete canonical set** of all L2 `BusinessFunction`s from Step 2.
 2. Organize all these L2 `BusinessFunction`s into a logical hierarchy under 5-7 newly created L1 `BusinessFunction` parents.
-3. Group these L1 `BusinessFunction`s under a single L0 `BusinessFunction` named "[Sector Type] Operations".
+3. Group these L1 `BusinessFunction`s under a single L0 `BusinessFunction`.
 
 ---
 
