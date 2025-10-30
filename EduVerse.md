@@ -1,11 +1,9 @@
 # Reference Architecture Design Brief: "EduVerse Reference Model"
 
-## Part 1: Sector Context
+## Part 1: Sector Context Profile
 
-* **Sector Type:** "A modern, research-intensive university focused on education, research, and societal impact."
-* **Core Value Streams:**
-  * **VS1:** **Name:** "Acquire & Develop Talent" | **Description:** "The end-to-end value stream for prospective and current students. It begins with attracting and admitting students, guides them through their educational journey of learning and assessment, and concludes with their graduation and transition into the alumni community."
-  * **VS2:** **Name:** "Secure Funding & Valorise Research" | **Description:** "The end-to-end value stream for the research lifecycle, focused on external stakeholders. It starts with identifying research opportunities and acquiring funding, covers the execution and management of research projects, and ends with the dissemination and valorisation of research outcomes to society and industry."
-  * **VS3:** **Name:** "Share Knowledge & Engage Community" | **Description:** "The end-to-end value stream for lifelong learning and societal engagement. It encompasses the development and delivery of professional education for external participants, establishing societal and corporate partnerships, and organizing public engagement events to share academic knowledge with a wider audience."
-
-  ---
+* **Sector Name:** Research-Intensive University
+* **Core Purpose & Societal Role:** To create, preserve, and disseminate knowledge through research and education, and to contribute to societal development by training future leaders and solving complex problems.
+* **Primary Business Model Archetype(s):** A hybrid model, primarily combining Business-to-Consumer (B2C) for students, Business-to-Business (B2B) for corporate research partners, and Business-to-Government (B2G) for publicly funded research projects.
+* **Key Strategic Drivers & Basis of Competition:** Competition is primarily driven by **Reputation & Excellence** (the 'brand' of the institution, quality of faculty, and rankings) and **Innovation & Impact** (the novelty and societal relevance of its research outcomes).
+* **Dominant Environmental Factors:** Operates within a context of significant public funding and societal accountability, with a strong emphasis on academic freedom and long-term impact over short-term profit.
