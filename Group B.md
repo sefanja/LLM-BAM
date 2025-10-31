@@ -1,53 +1,70 @@
 ## Part 2: Procedure
 
-### Step 1: Define the Strategic Foundation (The WHY)
+### Step 1: Define the Strategic Foundation
 
 1. Identify **2-3 primary, external `Customer Segments`** for the defined sector.
-2. For **each** `Customer Segment`, identify its core `Value Propositions`. **Crucial Rule:** For maximum clarity, you must classify each Value Proposition into one of the following three types, based on what the customer ultimately receives:
-   * **(a) `Product Proposition`:** Customer receives **ownership** of a resource. (e.g., a delivered report, a piece of software).
-   * **(b) `Access Service Proposition`:** Customer receives temporary **right to use** a resource. (e.g., SaaS subscription, equipment rental).
-   * **(c) `Action Service Proposition`:** Customer receives the **benefit of an activity**. (e.g., a consulting service, a maintenance task).
+2. For **each** `Customer Segment`, identify its core `Value Propositions`. **Crucial Rule:** For maximum clarity, you must classify each Value Proposition into one of the following four types, based on the ultimate right the customer receives:
+   * **(a) `Idea Proposition`:** Customer receives full ownership of an intellectual concept.
+   * **(b) `Product Proposition`:** Customer receives full ownership of a physical or digital good.
+   * **(c) `Usage Right Proposition`:** Customer receives a temporary right to use a resource.
+   * **(d) `Performance Right Proposition`:** Customer receives the benefit of an activity.
 3. Present the result as a list where each `Customer Segment` is paired with one or more clearly defined and classified `Value Propositions`.
 
 ---
 
-#### Step 2: Derive and Fully Characterize the Core Value Streams
+#### Step 2: Define and Scope the Core Value Streams
 
-1. For **each individual** `Value Proposition` identified in Step 1, define one unique L0 `BusinessProcess` that represents the complete value stream.
-2. **Crucial Design Choices (The Archetype Rules):** For each value stream, you must now fully characterize its archetype by making two distinct strategic choices:
-   * **Choice A: The `Value Chain Starting Point`:** Define where in the broader value system this value stream begins. Choose **one**:
-     * **`Creator`:** The value stream starts from basic inputs to create a fundamentally new product/service.
-     * **`Integrator`:** The value stream starts by combining complex components or services from external suppliers.
-     * **`Distributor`:** The value stream starts with finished products/services from others to make them accessible to customers.
-
-   * **Choice B: The `Value Stream Pattern (CODP)`:** Define how the value stream is triggered by customer demand. Choose **one**:
-     * **`Make-to-Stock (MTS) Pattern`:** Value is created in anticipation of customer orders.
-     * **`Assemble-to-Order (ATO) Pattern`:** Final value configuration is triggered by a customer order.
-     * **`Engineer-to-Order (ETO) Pattern`:** Almost all value creation is triggered by a customer order.
-3. **Strict Rule (Starreveld's Value Cycle):** Ensure each value stream still describes a complete value cycle (Agree, Perform, Counter-perform).
-4. Present the result as a list with the following structure: `[L0 Value Stream Name, Description, Originating VP, **Starting Point**, **Value Stream Pattern**]`.
+1. For each `Value Proposition`, determine its **Output Value Level** using the types from Step 1.
+2. For each proposition's context, determine the primary **Input Value Level** the organization starts with.
+   * **Constraint:** Standard procurement of supplies does not count as a value level jump.
+3. **Apply the Value Stream Scoping Principle:**
+   * Analyze the gap between Input and Output levels. A gap of two or more levels indicates a **potential split point**.
+   * The final decision to split depends on the **typical customer order decoupling point (CODP)** for the sector.
+     * **Rule A (Do Not Split):** If a single customer order typically triggers the entire end-to-end process (**Engineer-to-Order (ETO)** / **Assemble-to-Order (ATO)**), model it as a **single, unified value stream**.
+     * **Rule B (Must Split):** If the organization creates an **intermediate, standardized resource to stock** in anticipation of future orders (**Make-to-Stock (MTS)**), you **must split** the value streams at that decoupling point. This "stock" can be physical inventory, a reusable digital asset, or a pre-approved intellectual concept.
+4. Define the initial set of customer-facing L0 `BusinessProcess` elements based on this analysis.
+5. **Dependency Analysis (Discovering Internal Streams):**
+   * For each defined value stream, ask: "Does the execution of this stream depend on a significant, durable internal asset that must be created first?"
+   * If yes, define an additional, preceding L0 `BusinessProcess` for the creation of that internal asset.
+6. **Characterize All Value Streams:** For every L0 `BusinessProcess` (both external and internal), assign its `Value Stream Pattern (CODP)`.
+   * **Choose one:** `ETO`, `ATO`, or `MTS`.
+   * **Guiding Principle:** For this reference model, choose the 'deepest' pattern (`ETO` > `ATO` > `MTS`) that is a typical case for the sector, not a rare exception.
+   * **Naming Convention:** For split streams, use clear `Verb-Noun` names (e.g., `Create Network Asset`, `Operate Network Service`).
+   * Present the final result as a list: `[L0 Value Stream Name, Description, Originating VP, **Value Stream Pattern**]`.
 
 ---
 
 #### Step 3: Deconstruct Value Streams into Atomic Process Steps and Objects
 
-1. **Identify the Atomic L2 Process Steps:** For each L0 `BusinessProcess`, identify a logical sequence of 8-15 atomic L2 `BusinessProcess` steps that directly contribute to the value proposition for the external stakeholder.
-   * **Crucial Granularity Rule:** Define capabilities as distinct, atomic competencies, not broad functions. A single capability can realize steps in different value streams, but should not cover many unrelated steps within one stream.
-     * **Example:** Instead of one broad `Order Management` capability, define specific ones like `Order Capture`, `Price Calculation`, and `Fulfillment Scheduling`.
-   * **Crucial Single Case Rule:** The sequence must describe the journey of a **single case** (e.g., one customer order) from its external trigger. Exclude all preparatory, design, or portfolio management steps.
-   * **Crucial Business Reality Rule:** Model the business reality, not the data administration of it. All process steps and objects must represent real-world actions, agreements, or assets. Exclude any element that only describes the act of recording or managing data *about* the business.
+1. **Deconstruct Value Streams into Atomic Process Steps:** For each L0 `BusinessProcess`, first determine its delivery target and then deconstruct it into a logical sequence of atomic L2 `BusinessProcess` steps.
+   * **A) For streams delivering to an EXTERNAL customer:** Structure the L2 steps into the four phases of the Customer Value Cycle:
+     * **Phase 1: Agree:** Steps establishing the binding agreement.
+     * **Phase 2: Perform:** Steps executing the primary value-creating activity. This phase should be sub-structured into:
+       * **2a. Prepare:** Steps that configure resources for the specific case.
+       * **2b. Execute:** The core step(s) of transformation or creation.
+       * **2c. Finalize:** Steps that conclude the activity and prepare for delivery.
+     * **Phase 3: Counter-Perform:** Steps related to the customer's reciprocal performance.
+     * **Phase 4: Aftercare:** Steps for post-delivery support.
+   * **B) For streams delivering an INTERNAL asset:** An **asset** is defined here as any durable, non-human resource (physical, digital, or intellectual) created to enable future value streams. Structure the L2 steps into the three phases of the Asset Creation Cycle:
+     * **Phase 1: Conceptualize:** Steps defining the asset's requirements and design.
+     * **Phase 2: Realize:** Steps for the actual construction or development of the asset.
+     * **Phase 3: Deploy:** Steps to make the asset operational and available for use.
+2. **Apply Overarching Rules to All Steps:**
+   * **Crucial Rule (Business Reality Principle):** Model the business reality, not the data administration of it. All process steps and objects must represent real-world actions, agreements, or assets. Exclude any element that only describes the act of recording or managing data *about* the business.
      * **Example:**
        * **Correct (Business Reality):** "Accept Customer Order" (creates a real `Sales Agreement`).
        * **Incorrect (Data Shadow):** "Enter Order into System" (creates a data `Order Record`).
-2. **Classify Each Step and Identify its Primary Object:** For each L2 process step, perform the following:
-   1. **Classify the step's primary purpose** into **one** of the following categories.
-      * **Transactional:** Creates a new, binding **agreement** between parties.
-      * **Analytical/Cognitive:** Creates a new **insight, plan, or design**.
-      * **Operational/Delivery:** Creates, transforms, or transports a **physical or digital resource**.
-   2. **Use this Tie-Breaker Rule for hybrid steps:** If a step fits multiple categories, classify it according to this hierarchy: **1. Transactional > 2. Operational > 3. Analytical**.
-   3. **Identify the primary L2 `BusinessObject`** created or transformed by the step, consistent with its classification.
-      * **Naming Rule:** Name the **real-world entity**, not its administrative or informational representation.
-3. **Present the Result as a Structured List:** Present the result as a **single, flat list** of `[L2 Process Name, Primary L2 Object Name, Parent L0 Value Stream Name]` tuples.
+3. **Classify Each Step and Identify its Primary Object:** For each L2 process step, perform the following:
+   1. **Classify the step's primary output** into **one** of the following three universal archetypes. This creates a consistent value ontology for both external and internal processes:
+      * **`Commitment Output`:** The step's output is a new, binding **commitment** or entitlement, either formal (e.g., a customer contract) or informal (e.g., an internal work order). This establishes an obligation to provide access or perform an action.
+      * **`Resource Output`:** The step's output is a created, transformed, or transported **physical or digital resource**.
+      * **`Conceptual Output`:** The step's output is a new **insight, plan, or design**.
+   2. **Use this Tie-Breaker Rule for hybrid steps:** If a step's output fits multiple categories, classify it according to this hierarchy: **1. `Commitment` > 2. `Resource` > 3. `Conceptual`**. This correctly prioritizes the creation of a binding obligation over the physical work or the preceding design work.
+   3. **Identify the primary L2 `BusinessObject`** created or transformed by the step, ensuring its name is consistent with the chosen classification.
+      * **Crucial Naming Rule (The 'Valuable Entity' Principle):** You must name the actual, valuable entity in the real world, not its administrative container Apply this Litmus Test to every object name:
+         * Does the name describe the valuable **agreement, status, or right** itself? (e.g., `Sales Agreement`)
+         * Or does it describe the **data container** that holds information *about* it? (e.g., `Order Record`, `Customer File`)
+4. **Present the Result as a Structured List:** Present the result as a **single, flat list** of `[L2 Process Name, Primary L2 Object Name, Parent L0 Value Stream Name]` tuples.
 
 ---
 
@@ -78,15 +95,26 @@
 ### Step 5: Build the Canonical Capability Hierarchy (The ANCHOR)
 
 1. Take the **complete canonical set** of all L2 `BusinessFunction`s from Step 4.
-2. Organize all these L2 `BusinessFunction`s into a logical hierarchy under 5-7 newly created L1 `BusinessFunction` parents.
-3. Group these L1 `BusinessFunction`s under a single L0 `BusinessFunction`.
+2. **Focus exclusively on the core, value-creating and value-exchanging capabilities.** All generic, internal supporting capabilities (like generic HR, Finance, or IT management) are considered out of scope.
+3. Organize the core L2 `BusinessFunction`s under L1 parent capabilities, using the following structured approach:
+   1. **Use the three universal layers as the primary *categorization principle*** for your L1 capabilities.
+      * **Layer 1 (The Customer Interface):** Contains capabilities managing interaction and value exchange with customers.
+      * **Layer 2 (The Core Engine):** Contains capabilities forming the core "engine" of value creation.
+      * **Layer 3 (The Supplier Interface):** Contains capabilities managing interaction and value exchange with suppliers and partners.
+   2. **For each universal layer, identify the primary, coherent *management domains*.** A management domain is a collection of L2 capabilities that an organization would logically want to manage as a single unit due to shared strategic goals, competencies, resources, or a common lifecycle.
+   3. **For each identified domain, create a distinct L1 `BusinessFunction`.**
+   4. **Crucial Naming Rule:** For each L1 `BusinessFunction`, you must generate a **sector-specific and recognizable name** that accurately reflects its purpose. Do not use the generic archetype names.
+   5. **Group the relevant L2 `BusinessFunction`s** from the canonical set under the appropriate L1 parent.
+   6. **Layer Classification Rule:** For each L1 `BusinessFunction` you create, you must classify it by assigning it to exactly one of the three universal layers (`Customer Interface`, `Core Engine`, or `Supplier Interface`). This classification will be used to generate a property in the final output.
+4. Group all L1 `BusinessFunction`s under a single L0 `BusinessFunction`.
+   * **Crucial L0 Naming Rule:** This L0 `BusinessFunction` must reflect the organization's core value-creating function.
 
 ---
 
 ### Step 6: Structure Other Hierarchies by Mirroring the Anchor (The MIRROR)
 
 1. **Object Hierarchy:** Create L0/L1 `BusinessObject`s and structure the L2 `BusinessObject`s to exactly mirror the capability hierarchy.
-   * **Crucial Naming Rule:** Name each L0/L1 object as a conceptual, singular noun. Avoid generic suffixes like "Objects".
+   * **Crucial Naming Rule:** Name each L0/L1 object as a conceptual, singular noun. Avoid overly generic or abstract terms like 'Asset', 'Record', or 'Object' at the L0 and L1 levels. The name should be meaningful within the sector's context.
      * **Example:** If L2 objects are `Sales Quote` and `Sales Order`, the L1 parent should be `Sales Agreement`, not `Sales Objects`.
 2. **Process Hierarchy:**
    * **Objective:** To structure the L2 process steps into meaningful stages for each L0 Value Stream, using the capability hierarchy as a structural template.
@@ -98,19 +126,30 @@
 
 ---
 
-### Step 7: Derive Aggregate Relationships & Generate Final Output
+### Step 7: Derive All Relationships & Generate Final Output
+
+**Crucial Principle for this Step (Strict Scoping):** The only relationships permitted in the final model are those explicitly generated by the strict rules defined below. You must not infer, add, or create any other relationships, especially those that cross hierarchical levels (e.g., from an L1 element to an L2 element).
 
 1. **Define Base Relationships (L2) with Strict Rules:** Formally define all L2 transversal relationships based on the following **exclusive** set of rules:
    * **Rule A: `AccessRelationship` (Custodianship):** For each L2 `BusinessObject`, create exactly one `AccessRelationship` originating from the single L2 `BusinessFunction` that was identified as its custodian in Step 4.
    * **Rule B: `ServingRelationship` (Realization):** For each tuple in the **'Capability-to-Process Links' list from Step 4.4.1**, create a `ServingRelationship` from the capability to the process.
    * **Rule C: `ServingRelationship` (Support):** For each tuple in the **'Capability-to-Capability Links' list from Step 4.4.2**, create a `ServingRelationship` from the Provider to the Consumer.
-2. **Derive Aggregate Relationships (L1 & L0):** Execute a formal, layered derivation algorithm:
-   * **Part A: Derive L1 Relationships.** Create an aggregate relationship between two L1 parent elements **if, and only if**, at least one valid base relationship of the **same type** exists between any of their respective L2 child elements.
-   * **Part B: Derive L0 Relationships.** After completing Part A, create an aggregate relationship between two L0 parent elements **if, and only if**, at least one valid L1 relationship (derived in Part A) of the same type exists between any of their respective L1 child elements.
+2. **Derive Aggregate Relationships (L1 & L0) with a Formal Algorithm:** Execute the following layered derivation algorithm precisely and completely.
+   * **Part A: Derive L1 Relationships.**
+     * For every pair of L1 parent elements (e.g., `L1 Parent A`, `L1 Parent B`), you **must** create an aggregate relationship from `L1 Parent A` to `L1 Parent B` **if, and only if**, at least one valid base relationship of the same type exists between any of their respective L2 child elements.
+   * **Part B: Derive L0 Relationships.**
+     * After completing Part A, for every pair of L0 parent elements (e.g., `L0 Parent X`, `L0 Parent Y`), you **must** create an aggregate relationship from `L0 Parent X` to `L0 Parent Y` **if, and only if**, at least one valid L1 relationship (derived in Part A) of the same type exists between any of their respective L1 child elements.
    * **Aggregation Constraint:** All derived relationships must be between two different parent elements.
-3. **Define Composition Relationships:** Formally define each `CompositionRelationship` between a parent and its child, based on the hierarchy established in Step 5 and 6.
-4. **Verification Step:** Provide a concrete example to prove the derivation was successful.
-5. **Generate Final CSV Output:** Consolidate all elements and all relationships (L0, L1, L2, and Composition) into the three final CSV files according to the specified format.
+**3. Define Composition Relationships:** Formally define each `CompositionRelationship` between a parent and its child, based on the hierarchy established in Step 5 and 6.
+**4. Mandatory Verification Step (Prove the Derivation):** To prove the derivation algorithm was executed correctly, you must provide **one concrete example** of a derived `ServingRelationship`.
+   * **Instructions:**
+     1. Select one L2 `ServingRelationship` from your analysis in Step 4.
+     2. Identify the L1 parents of both the source and target L2 elements.
+     3. State the derived L1 `ServingRelationship` that must exist between these parents.
+     4. Identify the L0 parents of both L1 elements.
+     5. State the derived L0 `ServingRelationship` that must exist between these L0 parents.
+     * **Present this trace clearly as proof of correct execution.**
+**5. Generate Final CSV Output:** Consolidate all elements and all relationships (L0, L1, L2, and Composition) into the three final CSV files according to the specified format.
 
 **Output Format Specifications:**
 
@@ -160,6 +199,7 @@ Generate the output as three separate code blocks, each containing the raw conte
    * A property with `Key` = "Value Proposition" and `Value` = the full description of the originating Value Proposition.
    * A property with `Key` = "Starting Point" and `Value` = the chosen value (`Creator`, `Integrator`, or `Distributor`).
    * A property with `Key` = "Value Stream Pattern" and `Value` = the chosen value (`MTS`, `ATO`, or `ETO`).
-
 3. **L2 Process Steps (L2 `BusinessProcess`):** In addition to the base properties, every L2 `BusinessProcess` element must have one additional property:
    * A property with `Key` = "Sequence" and `Value` = a number indicating its sequential position within its parent L0 Value Stream (starting from "1" for each stream).
+4. **L1 Capabilities (L1 `BusinessFunction`):** In addition to the base properties, every L1 `BusinessFunction` element must have one additional property:
+   * A property with `Key` = "Capability Layer" and `Value` = the name of the universal layer it was assigned to in Step 5 (one of: `Customer Interface`, `Core Engine`, `Supplier Interface`).
