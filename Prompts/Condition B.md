@@ -27,6 +27,7 @@ The final model **must** adhere to the following nine formal constraints.
 * **(C7) Object Relevance:** Each `BusinessObject` must be modified by at least one `Capability`.
 * **(C8) Capability Purpose:** Each `Capability` must either directly realize a `ValueStream` stage or support another capability that does.
 * **(C9) Traceability:** Each `ValueStream` stage must be realized by **exactly one** `Capability`.
+* **(C10) Unique Custodianship:** Each `BusinessObject` that is not a leaf may be modified by at most one `Capability`.
 
 ### Step 3: Develop Architectural Catalogs
 
@@ -38,14 +39,15 @@ Develop the architectural catalogs, keeping the principles from Step 1 and the h
 
 ### Step 4: Define and Verify Architectural Mappings
 
-Create and verify the mappings between the catalogs. The final set of mappings must satisfy all remaining constraints **(C4 through C9)**.
+Create and verify the mappings between the catalogs. The final set of mappings must satisfy all ten constraints (C4 through C10).
 
-1. **Define All Relationship Types:**
+1. Define All Relationship Types:
    * Map the appropriate `Capabilities` (Source) to the **`ValueStream` elements at their corresponding hierarchical level** (Target) that they realize (using a `ServingRelationship`).
    * **Constraint (C9):** The mapping at the lowest level of detail (the stages) must be a strict 1-to-1: each stage is realized by exactly one capability.
    * Map `Capabilities` to the `BusinessObjects` they **modify**.
-   * Define `support` relationships between `Capabilities` to ensure all capabilities have a purpose (as per C8).
-2. **Verify and Refine:** Review all catalogs and mappings. Adjust the model iteratively until all nine constraints are fully satisfied.
+   * **Constraint (C10):** The `AssociationRelationship` between Capabilities and Business Objects **must** adhere to the Unique Custodianship principle across all hierarchical levels.
+   * Define `support` relationships between `Capabilities` to ensure all capabilities have a purpose (**as per C8**).
+2. Verify and Refine: Review all catalogs and mappings. Adjust the model iteratively until all ten constraints are fully satisfied.
 
 ### Step 5: Prepare for Final Output
 
