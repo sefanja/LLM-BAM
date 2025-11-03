@@ -1,45 +1,28 @@
 //======================================================================
-// ARCHITECTURAL COHERENCE VALIDATOR - FINAL VERSION (CLEANED AND DEBUGGED)
-//
-// This script is ready for use in the jArchi console for formal experimentation.
+// ARCHITECTURAL COHERENCE VALIDATOR
 //======================================================================
 
-/**
- * Helper function to simplify conversion of jArchi collection to Array.
- * @param {jArchiCollection} collection 
- * @returns {Array<Object>}
- */
-const toArray = (collection) => {
-    const arr = [];
-    collection.each(i => arr.push(i));
-    return arr;
-};
+const getLevel = (obj) => $(obj).prop('Level');
 
-function getParent(element) {
-    return element.inRels('composition-relationship').sourceEnds().first();
-}
+const getParent = (obj) => $(obj).inRels('composition-relationship').sourceEnds().first();
 
-const getChildren = (element) => {
-    return element.outRels('composition-relationship').targetEnds();
-}
+const getChildren = (obj) => $(obj).outRels('composition-relationship').targetEnds();
 
-const getRoot = (element) => {
-    let current = element;
+const getRoot = (obj) => {
+    let current = obj;
     while (true) {
         const parent = getParent(current);
-        if (!parent) return current.first();
-        current = $(parent); 
+        if (!parent) return current;
+        current = parent;
     }
 };
 
-/**
- * Finds the number of ancestors for an element based on Composition relationships. (C0)
- * @param {JArchiCollection} element
- * @returns {number}
- */
-const getAncestorCount = (element) => {
+const isLeaf = (obj) => $(obj).outRels('composition-relationship').size() === 0;
+
+// Finds the number of ancestors for an element based on Composition relationships. (C0)
+const getAncestorCount = (obj) => {
     let count = 0;
-    let current = element;
+    let current = obj;
     
     // De lus gaat door zolang we een ouder vinden
     while (true) {
@@ -47,49 +30,33 @@ const getAncestorCount = (element) => {
         if (parent === undefined || parent === null) {
             break; // Geen ouder meer gevonden, stop
         }
-        current = $(parent); // Maak een jArchi object van de ouder
+        current = parent; // Maak een jArchi object van de ouder
         count++;
     }
     return count;
 };
 
-/**
- * Checks for Acyclicity (C2).
- * @param {jArchiCollection} element 
- * @returns {boolean} True if the element is its own ancestor.
- */
-const isOwnAncestor = (element) => {
-    let current = element;
-    const initialId = element.id;
+const isOwnAncestor = (obj) => {
+    let current = obj;
+    const initialId = obj.id;
     
-    // De lus gaat door zolang we omhoog kunnen
     while (true) {
         const parent = getParent(current);
-        
-        if (parent === undefined || parent === null) {
-            break; // Geen ouder meer, geen cyclus
-        }
-        
-        // Controleer of de ouder de oorspronkelijke is
+        if (parent === undefined || parent === null) break;
         if (parent.id === initialId) return true;
-        
-        current = $(parent); // Update current naar de gevonden ouder
+        current = parent;
     }
     return false;
 };
 
-/**
- * Checks if a capability (directly or transitively) supports a Value Stream. (C8)
- * @param {jArchiCollection} element - The starting capability.
- * @returns {boolean}
- */
-const supportsValueStream = (element) => {
-    const queue = toArray(element);
-    const visited = new Set(element.map(e => e.id));
+// Checks if a capability (directly or transitively) supports a Value Stream. (C8)
+const supportsValueStream = (obj) => {
+    const queue = [obj];
+    const visited = new Set([obj.id]);
 
     while (queue.length > 0) {
-        const currentCapability = $(queue.shift());
-        const consumers = currentCapability.outRels('serving-relationship').targetEnds();
+        const currentCapability = queue.shift();
+        const consumers = $(currentCapability).outRels('serving-relationship').targetEnds();
 
         // Direct realization of a Value Stream found
         if (consumers.filter('value-stream').size() > 0) {
@@ -108,28 +75,58 @@ const supportsValueStream = (element) => {
 };
 
 /**
- * Formats a list of violating items for console output.
- * @param {jArchiCollection | Array<string>} violations 
- * @param {number} max 
- * @returns {Array<string>}
+ * Calculates the total number of unique Top-Level (L0) Value Streams 
+ * a Capability influences (directly or indirectly).
+ * This is the mechanism for the Cross-Stream Utilization Index.
  */
+const getDirectlySupportedTopValueStreams = (obj) => {
+    const valueStreams = $(obj).outRels('serving-relationship').targetEnds('value-stream');
+    return new Set(valueStreams.map(vs => getRoot(vs).id));
+};
+
+/**
+ * Calculates the total number of unique Top-Level (L0) Value Streams 
+ * a Capability influences (directly or indirectly).
+ * This is the mechanism for the Cross-Stream Utilization Index.
+ */
+const getSupportedTopValueStreams = (startingCapability) => {
+    // De queue is een Set/Array van element-wrappers
+    const queue = [startingCapability];
+    const visitedCapabilities = new Set([startingCapability.id]);
+    const topStreamIDs = new Set(); 
+    
+    while (queue.length > 0) {
+        const currentCapability = queue.shift();
+        const consumers = $(currentCapability).outRels('serving-relationship').targetEnds();
+
+        // 1. DIRECTE INVLOED (BASE CASE)
+        consumers.filter('value-stream').each(vs => topStreamIDs.add(getRoot(vs).id));
+
+        // 2. INDIRECTE INVLOED (TRANSITIVE CLOSURE)
+        consumers.filter('capability').each(dependentCap => {
+            if (!visitedCapabilities.has(dependentCap.id)) {
+                visitedCapabilities.add(dependentCap.id);
+                queue.push(dependentCap);
+            }
+        });
+    }
+
+    return topStreamIDs; 
+};
+
+// Formats a list of violating items for console output.
 const getExamples = (violations, max = 3) => {
     const examples = [];
-    const violationArray = Array.isArray(violations) ? violations : toArray(violations);
-    const size = violationArray.length;
 
-    for (let i = 0; i < max && i < size; i++) {
-        const v = violationArray[i];
-        if (typeof v === 'string') {
-            examples[i] = v;
-        } else if (v.type.includes('-relationship')) {
-            const sourceName = v.source ? v.source.name : 'undefined';
-            const targetName = v.target ? v.target.name : 'undefined';
-            examples[i] = `${v.type}: (${sourceName}) --> (${targetName})`;
-        } else {
+    for (let i = 0; i < max && i < violations.size(); i++) {
+        const v = violations.get(i);
+        if (v.type.includes('-relationship')) {
+            examples[i] = `${v.type}: (${v.source.name}) --> (${v.target.name})`;
+        } else { // element
             examples[i] = `${v.type}: ${v.name}`;
         }
     }
+
     return examples;
 };
 
@@ -203,12 +200,7 @@ const report = {
     summary: { opportunityCount: 0, violationCount: 0, rulesViolated: [], rulesPassed: [] }
 };
 
-/**
- * Updates the global report structure with the results for a specific rule.
- * @param {string} rule - The rule key (e.g., 'C1').
- * @param {jArchiCollection} space - The set of elements/relations where the rule applies (the rule violation opportunity space).
- * @param {jArchiCollection} compliant - The set of elements/relations compliant with the rule.
- */
+// Updates the global report structure with the results for a specific rule.
 const updateReport = (rule, space, compliant) => {
     const violations = space.filter(s => compliant.filter('#' + s.id).size() < 1);
     const opportunityCount = space.size();
@@ -234,28 +226,28 @@ let compliant; // The items that comply to the constraint
 
 // --- C0: Valid Level (Property vs. Ancestor Count) ---
 space = $('element');
-compliant = space.filter(e => parseInt($(e).prop('Level')) === getAncestorCount($(e)));
+compliant = space.filter(e => parseInt(getLevel(e) === getAncestorCount(e)));
 updateReport('C0', space, compliant);
 
 
 // --- C1: Unique Parent ---
-space = $('element').filter(e => getAncestorCount($(e)) > 0); // Elements having a parent
+space = $('element').filter(e => getAncestorCount(e) > 0); // Elements having a parent
 compliant = space.filter(e => $(e).inRels('composition-relationship').size() < 2);
 updateReport('C1', space, compliant);
 
 
 // --- C2: Acyclicity ---
-space = $('element').filter(e => getAncestorCount($(e)) > 0); // Elements having a parent
-compliant = space.filter(e => !isOwnAncestor($(e)));
+space = $('element').filter(e => getAncestorCount(e) > 0); // Elements having a parent
+compliant = space.filter(e => !isOwnAncestor(e));
 updateReport('C2', space, compliant);
 
 
 // --- C3: Consistent Refinement Depth (Leaf Violation Density) ---
-space = $('element').filter(e => isLeafElement($(e)));
+space = $('element').filter(isLeaf);
 
 const depthCounts = {};
 space.each(e => {
-    const level = $(e).prop('Level');
+    const level = getLevel(e);
     depthCounts[level] = (depthCounts[level] || 0) + 1;
 });
 
@@ -268,24 +260,25 @@ for (const level in depthCounts) {
     }
 }
 
-compliant = space.filter(e => $(e).prop('Level') === dominantDepth);
+compliant = space.filter(e => getLevel(e) === dominantDepth);
 updateReport('C3', space, compliant);
 
 
 // --- C4: Upward Coherence ---
 // opportunity space: Alle niet-hiërarchische relaties tussen elementen die zelf kinderen zijn (hebben een parent)
 space = $('relation').not('composition-relationship').filter(r =>
-    getAncestorCount($(r.source)) > 0 || getAncestorCount($(r.target)) > 0); // Top-level relations have no opporunity for violation
+    getAncestorCount(r.source) > 0 || getAncestorCount(r.target) > 0); // Top-level relations have no opporunity for violation
 
 // compliant: Relaties waar de ouders direct met dezelfde relatie verbonden zijn, of waar de ouders gelijk zijn, of waarde ouders capabilities in dezelfde waardestroom zijn.
 compliant = space.filter(r => {
-    const sourceTopVSIDs = getDirectlySupportedTopValueStreams($(r.source));
-    const targetTopVSIDs = getDirectlySupportedTopValueStreams($(r.target));
+    const sourceTopVSIDs = getDirectlySupportedTopValueStreams(r.source);
+    const targetTopVSIDs = getDirectlySupportedTopValueStreams(r.target);
     const sameValueStream = Array.from(sourceTopVSIDs).some(sourceID => targetTopVSIDs.has(sourceID));
     if (sameValueStream) return true; // Support/serving relationships between primary capabilities within the same value stream are left implicit
 
-    const sourceParent = getParent($(r.source));
-    const targetParent = getParent($(r.target));
+    const sourceParent = getParent(r.source);
+    const targetParent = getParent(r.target);
+    if (!sourceParent || !targetParent) return false;
     if (sourceParent.id === targetParent.id) return true; // No need for reflexive relations
     
     const parentRelExists = $(sourceParent).outRels(r.type).targetEnds().filter(tp => tp.id === targetParent.id).size() > 0;
@@ -297,12 +290,14 @@ updateReport('C4', space, compliant);
 // --- C5: Downward Coherence ---
 // violation opportunity space: Alle niet-hiërarchische relaties die zich niet op het diepste niveau bevinden
 space = $('relation').not('composition-relationship').filter(r =>
-    getChildren($(r.source)).size() > 0
-    || getChildren($(r.target)).size() > 0);
+    getChildren(r.source).size() > 0
+    || getChildren(r.target).size() > 0);
 
 compliant = space.filter(r => {
-    const sourceChildren = getChildren($(r.source));
-    const targetChildren = getChildren($(r.target));
+    const sourceChildren = getChildren(r.source);
+    const targetChildren = getChildren(r.target);
+
+    if (sourceChildren.size() < 1 || targetChildren.size() < 1) return false;
     
     // Zoek of er ten minste één relatie van type r.type van een sourceChild naar een targetChild gaat.
     const numberOfChildRels = sourceChildren.outRels(r.type).targetEnds().filter(tc => 
@@ -318,7 +313,7 @@ updateReport('C5', space, compliant);
 space = $('capability');
 compliant = space.filter(e => {
     let businessObjects = $(e).outRels('association-relationship').targetEnds('business-object').size();
-    if (isLeafElement($(e))) {
+    if (isLeaf(e)) {
         return businessObjects > 0;
     } else {
         return businessObjects === 1;
@@ -331,18 +326,14 @@ updateReport('C6', space, compliant);
 space = $('business-object');
 compliant = space.filter(e => {
     let capabilities = $(e).inRels('association-relationship').sourceEnds('capability').size();
-    if (isLeafElement($(e))) {
-        return capabilities > 0;
-    } else {
-        return capabilities === 1;
-    }
+    return capabilities > 0 && (capabilities < 2 || isLeaf(e));
 });
 updateReport('C7', space, compliant);
 
 
 // --- C8: Capability Purpose (Transitive Reachability) ---
 space = $('capability');
-compliant = space.filter(e => supportsValueStream($(e)));
+compliant = space.filter(supportsValueStream);
 updateReport('C8', space, compliant);
 
 
@@ -350,16 +341,6 @@ updateReport('C8', space, compliant);
 space = $('value-stream');
 compliant = space.filter(e => $(e).inRels('serving-relationship').sourceEnds('capability').size() === 1);
 updateReport('C9', space, compliant);
-
-/**
- * Helper function to check if an element is at the deepest, 'leaf' level of its hierarchy.
- * @param {jArchiCollection} element 
- * @returns {boolean}
- */
-function isLeafElement(element) {
-    // Een element is een 'blad' als het geen Composition uitgaande relaties heeft
-    return element.outRels('composition-relationship').size() === 0;
-}
 
 
 // ====================================================================
@@ -409,79 +390,20 @@ console.log();
 console.log('======================================================================');
 
 
-// Extra output for reporting, not to feed back to the LLM
-
-/**
- * Calculates the total number of unique Top-Level (L0) Value Streams 
- * a Capability influences (directly or indirectly).
- * This is the mechanism for the Cross-Stream Utilization Index.
- * 
- * @param {JArchiCollection} capability - The single Capability element to start the search from.
- * @returns {Set<string>} A Set of unique L0 Value Stream IDs.
- */
-function getDirectlySupportedTopValueStreams(capability) {
-    const topStreamIDs = new Set(); 
-    
-    const valueStreams = capability.outRels('serving-relationship').targetEnds('value-stream');
-
-    valueStreams.each(vs => {
-        const topVSId = getRoot($(vs)).id;
-        if (topVSId) topStreamIDs.add(topVSId);
-    });
-
-    return topStreamIDs;
-}
-
-/**
- * Calculates the total number of unique Top-Level (L0) Value Streams 
- * a Capability influences (directly or indirectly).
- * This is the mechanism for the Cross-Stream Utilization Index.
- * 
- * @param {JArchiCollection} startingCapability - The single Capability element to start the search from.
- * @returns {Set<string>} A Set of unique L0 Value Stream IDs.
- */
-function getSupportedTopValueStreams(startingCapability) {
-    // De queue is een Set/Array van element-wrappers
-    const queue = toArray(startingCapability); 
-    const visitedCapabilities = new Set(startingCapability.map(e => e.id));
-    const topStreamIDs = new Set(); 
-    
-    while (queue.length > 0) {
-        const currentCapability = $(queue.shift());
-        const consumers = currentCapability.outRels('serving-relationship').targetEnds();
-
-        // 1. DIRECTE INVLOED (BASE CASE)
-        consumers.filter('value-stream').each(vs => {
-            const topVSId = getRoot($(vs)).id;
-            if (topVSId) topStreamIDs.add(topVSId);
-        });
-
-        // 2. INDIRECTE INVLOED (TRANSITIVE CLOSURE)
-        consumers.filter('capability').each(dependentCap => {
-            if (!visitedCapabilities.has(dependentCap.id)) {
-                visitedCapabilities.add(dependentCap.id);
-                queue.push(dependentCap);
-            }
-        });
-    }
-
-    return topStreamIDs; 
-}
+// ====================================================================
+// EXTRA CONSOLE OUTPUT, NOT FOR FEEDBACK TO LLM
+// ====================================================================
 
 const utilization = [];
 $('capability').each(e => {
-    const topVSIDs = getSupportedTopValueStreams($(e));
+    const topVSIDs = getSupportedTopValueStreams(e);
     utilization.push(topVSIDs.size);
 });
 const utilizationRate = utilization.reduce((a, b) => a + b, 0) / utilization.length;
 
-let levels = [];
-$('element').each(e => levels.push($(e).prop('Level')));
-levels = Array.from(new Set(levels));
-
 console.log();
 console.log('Elements: ' + $('element').size());
 console.log('Relations: ' + $('relation').size());
-console.log('Levels: ' + levels);
+console.log('Levels: ' + Array.from(new Set($('element').map(getLevel))).join(', '));
 console.log(`Coherence Violations: ${coherenceViolations}/${coherenceViolationOpportunities} (${Math.round(coherenceViolations/coherenceViolationOpportunities * 10000) / 100}%)`);
 console.log('Cross-Stream Utilization Index: ' + Math.round(utilizationRate * 10) / 10);
