@@ -19,18 +19,15 @@ const getRoot = (obj) => {
 
 const isLeaf = (obj) => $(obj).outRels('composition-relationship').size() === 0;
 
-// Finds the number of ancestors for an element based on Composition relationships. (C0)
+// Finds the number of ancestors for an element based on Composition relationships
 const getAncestorCount = (obj) => {
     let count = 0;
     let current = obj;
     
-    // De lus gaat door zolang we een ouder vinden
     while (true) {
         const parent = getParent(current);
-        if (parent === undefined || parent === null) {
-            break; // Geen ouder meer gevonden, stop
-        }
-        current = parent; // Maak een jArchi object van de ouder
+        if (!parent) break;
+        current = parent;
         count++;
     }
     return count;
@@ -226,7 +223,7 @@ let compliant; // The items that comply to the constraint
 
 // --- C0: Valid Level (Property vs. Ancestor Count) ---
 space = $('element');
-compliant = space.filter(e => parseInt(getLevel(e) === getAncestorCount(e)));
+compliant = space.filter(e => parseInt(getLevel(e)) === getAncestorCount(e));
 updateReport('C0', space, compliant);
 
 
@@ -313,11 +310,7 @@ updateReport('C5', space, compliant);
 space = $('capability');
 compliant = space.filter(e => {
     let businessObjects = $(e).outRels('association-relationship').targetEnds('business-object').size();
-    if (isLeaf(e)) {
-        return businessObjects > 0;
-    } else {
-        return businessObjects === 1;
-    }
+    return businessObjects > 0 && (businessObjects < 2 || isLeaf(e));
 });
 updateReport('C6', space, compliant);
 
@@ -390,10 +383,6 @@ console.log();
 console.log('======================================================================');
 
 
-// ====================================================================
-// EXTRA CONSOLE OUTPUT, NOT FOR FEEDBACK TO LLM
-// ====================================================================
-
 const utilization = [];
 $('capability').each(e => {
     const topVSIDs = getSupportedTopValueStreams(e);
@@ -402,8 +391,11 @@ $('capability').each(e => {
 const utilizationRate = utilization.reduce((a, b) => a + b, 0) / utilization.length;
 
 console.log();
-console.log('Elements: ' + $('element').size());
-console.log('Relations: ' + $('relation').size());
-console.log('Levels: ' + Array.from(new Set($('element').map(getLevel))).join(', '));
-console.log(`Coherence Violations: ${coherenceViolations}/${coherenceViolationOpportunities} (${Math.round(coherenceViolations/coherenceViolationOpportunities * 10000) / 100}%)`);
-console.log('Cross-Stream Utilization Index: ' + Math.round(utilizationRate * 10) / 10);
+console.log();
+console.log();
+console.log('EXTRA INFO (NOT FOR FEEDBACK TO LLM):');
+console.log(' * Elements: ' + $('element').size());
+console.log(' * Relations: ' + $('relation').size());
+console.log(' * Levels: ' + Array.from(new Set($('element').map(getLevel))).join(', '));
+console.log(' * Cross-Stream Utilization Index: ' + Math.round(utilizationRate * 10) / 10);
+console.log(` * Coherence Violations: ${coherenceViolations}/${coherenceViolationOpportunities} (${Math.round(coherenceViolations/coherenceViolationOpportunities * 10000) / 100}%)`);
