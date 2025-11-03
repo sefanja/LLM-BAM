@@ -6,7 +6,7 @@
 
 /**
  * Helper function to simplify conversion of jArchi collection to Array.
- * @param {JQueryCollection} collection 
+ * @param {jArchiCollection} collection 
  * @returns {Array<Object>}
  */
 const toArray = (collection) => {
@@ -15,9 +15,26 @@ const toArray = (collection) => {
     return arr;
 };
 
+function getParent(element) {
+    return element.inRels('composition-relationship').sourceEnds().first();
+}
+
+const getChildren = (element) => {
+    return element.outRels('composition-relationship').targetEnds();
+}
+
+const getRoot = (element) => {
+    let current = element;
+    while (true) {
+        const parent = getParent(current);
+        if (!parent) return current.first();
+        current = $(parent); 
+    }
+};
+
 /**
  * Finds the number of ancestors for an element based on Composition relationships. (C0)
- * @param {JQueryCollection} element 
+ * @param {JArchiCollection} element
  * @returns {number}
  */
 const getAncestorCount = (element) => {
@@ -26,7 +43,7 @@ const getAncestorCount = (element) => {
     
     // De lus gaat door zolang we een ouder vinden
     while (true) {
-        const parent = current.inRels('composition-relationship').sourceEnds().first();
+        const parent = getParent(current);
         if (parent === undefined || parent === null) {
             break; // Geen ouder meer gevonden, stop
         }
@@ -38,7 +55,7 @@ const getAncestorCount = (element) => {
 
 /**
  * Checks for Acyclicity (C2).
- * @param {JQueryCollection} element 
+ * @param {jArchiCollection} element 
  * @returns {boolean} True if the element is its own ancestor.
  */
 const isOwnAncestor = (element) => {
@@ -47,7 +64,7 @@ const isOwnAncestor = (element) => {
     
     // De lus gaat door zolang we omhoog kunnen
     while (true) {
-        const parent = current.inRels('composition-relationship').sourceEnds().first();
+        const parent = getParent(current);
         
         if (parent === undefined || parent === null) {
             break; // Geen ouder meer, geen cyclus
@@ -63,7 +80,7 @@ const isOwnAncestor = (element) => {
 
 /**
  * Checks if a capability (directly or transitively) supports a Value Stream. (C8)
- * @param {JQueryCollection} element - The starting capability.
+ * @param {jArchiCollection} element - The starting capability.
  * @returns {boolean}
  */
 const supportsValueStream = (element) => {
@@ -92,7 +109,7 @@ const supportsValueStream = (element) => {
 
 /**
  * Formats a list of violating items for console output.
- * @param {JQueryCollection | Array<string>} violations 
+ * @param {jArchiCollection | Array<string>} violations 
  * @param {number} max 
  * @returns {Array<string>}
  */
@@ -126,61 +143,61 @@ const report = {
             name: 'Valid Level',
             statement: 'Each element must be assigned a level that corresponds to its number of ancestors.',
             rationale: "A correct 'Level' property for each element makes it easier to validate the model.",
-            fix: "Assign each element a 'Level' property that corresponds to its position in the hierarchy, starting at '0' for the top-level elements."
+            coherence: false // false if the rule concerns only one element type, true if it concerns coherence between submodels
+            // Added later: opportunityCount, violationCount, examples
         },
         C1: {
             name: 'Unique Parent',
             statement: 'Each element has at most one parent.',
             rationale: 'This ensures a single, unambiguous position for every element in the hierarchy.',
-            fix: "For each violating element, review its incoming 'Composition' relationships and ensure only one remains."
+            coherence: false
         },
         C2: {
             name: 'Acyclicity',
             statement: 'An element cannot be its own ancestor.',
             rationale: 'This prevents ill-defined, circular refinement structures.',
-            fix: "Review the hierarchy for the violating element and remove the 'Composition' relationship that creates a circular dependency (e.g., A contains B, and B contains A)."
+            coherence: false
         },
         C3: {
             name: 'Consistent Refinement Depth',
             statement: "All hierarchies must be 'balanced'. All leaf elements must exist at the same level of detail.",
             rationale: 'This prevents incomplete levels of detail, which create both structural gaps and semantic ambiguity. An unbalanced model leaves the meaning of its most detailed elements unclear, as their defining peer group is incomplete.',
-            fix: "Adjust the hierarchies by either decomposing the shallower elements further or aggregating the deeper ones, so all final 'leaf' elements are at the same level."
+            coherence: false
         },
         C4: {
             name: 'Upward Coherence',
-            statement: 'A relationship between two elements requires a corresponding relationship between their parents.',
-            rationale: 'This ensures that low-level relationships are reflected at higher levels of abstraction. The exception allows lower-level support relations to remain implicit at higher levels.',
-            fix: "For each violating child-level relationship, add the corresponding missing relationship between the parent elements."
+            statement: 'A non-hierarchical relationship between two elements requires a corresponding relationship between their parents (if any), with one exception: the relationship does not need to be propagated if the parent elements are both primary capabilities within the same top-level value stream.',
+            coherence: true
         },
         C5: {
             name: 'Downward Coherence',
             statement: 'A relationship between two parent elements requires that at least one pair of their respective children is also related.',
             rationale: 'This ensures that high-level relationships are grounded in more detailed, concrete relations.',
-            fix: "For each violating parent-level relationship, identify a logical pair of child elements and add a corresponding relationship between them."
+            coherence: true
         },
         C6: {
             name: 'Capability Impact',
-            statement: 'Each capability must transform at least one business object.',
-            rationale: 'This ensures that every defined capability is meaningful by having a concrete impact on a business object. It prevents the modeling of abstract capabilities without a clear target for value creation.',
-            fix: "For each violating capability, either add an 'association-relationship' to a relevant business object or remove the capability."
+            statement: 'Each business capability must transform exactly one business object, with one exception: at the leaf level it may transform multiple objects.',
+            rationale: 'This ensures that every capability has a well-defined, non-overlapping impact on value creation. The exception at the leaf-level prevents the model from having to use unnatural language not typically used by the business.',
+            coherence: true
         },
         C7: {
             name: 'Object Relevance',
-            statement: 'Each business object must be modified by at least one capability.',
-            rationale: "This ensures that every business object is relevant to the organization's value-creating activities. It prevents the inclusion of objects that are never acted upon, keeping the model focused and purposeful.",
-            fix: "For each violating business object, either add an 'association-relationship' from a relevant capability or remove the object."
+            statement: 'Each business object must be transformed by exactly one business capability, with one exception: at the leaf level, an object may be transformed by multiple capabilities.',
+            rationale: "This ensures clear relevancy and accountability for the object in value-creating activities. The exception at the leaf-level prevents the modeler from having to identify overly detailed object lifecycle stages that would otherwise make the model unrecognizable.",
+            coherence: true
         },
         C8: {
             name: 'Capability Purpose',
             statement: 'Each capability must either directly realize a value stream stage or support another capability that does.',
             rationale: 'This guarantees that all potential is ultimately linked to a value-creating purpose.',
-            fix: "For each violating capability, ensure it is connected to the value creation process by either adding a 'serving-relationship' to a value stream stage or a 'serving-relationship' to another capability."
+            coherence: true
         },
         C9: {
             name: 'Traceability',
             statement: 'Each value stream stage must be realized by exactly one capability.',
             rationale: 'This constraint ensures traceability and governability. It establishes a clear, unambiguous link from value-creating action back to the accountable capability.',
-            fix: "For each violating value stream stage, review its incoming 'serving' relationships and ensure there is exactly one. Add a relationship if one is missing, or remove duplicates."
+            coherence: true
         }
     },
     summary: { opportunityCount: 0, violationCount: 0, rulesViolated: [], rulesPassed: [] }
@@ -189,20 +206,18 @@ const report = {
 /**
  * Updates the global report structure with the results for a specific rule.
  * @param {string} rule - The rule key (e.g., 'C1').
- * @param {JQueryCollection | number} opportunities - The set of elements/relations where the rule applies.
- * @param {JQueryCollection | number} violations - The set of elements/relations violating the rule.
+ * @param {jArchiCollection} space - The set of elements/relations where the rule applies (the rule violation opportunity space).
+ * @param {jArchiCollection} compliant - The set of elements/relations compliant with the rule.
  */
-const updateReport = (rule, opportunities, violations) => {
-    const opportunityCount = typeof opportunities === 'number' ? opportunities : opportunities.size();
-    const violationCount = typeof violations === 'number' ? violations : violations.size();
+const updateReport = (rule, space, compliant) => {
+    const violations = space.filter(s => compliant.filter('#' + s.id).size() < 1);
+    const opportunityCount = space.size();
+    const violationCount = violations.size();
 
     report.rules[rule].opportunityCount = opportunityCount;
     report.rules[rule].violationCount = violationCount;
     report.rules[rule].examples = getExamples(violations);
 
-    report.summary.opportunityCount += opportunityCount;
-    report.summary.violationCount += violationCount;
-    
     if (violationCount === 0) {
         report.summary.rulesPassed.push(rule);
     } else {
@@ -214,138 +229,148 @@ const updateReport = (rule, opportunities, violations) => {
 // CONSTRAINT IMPLEMENTATION
 // ====================================================================
 
-let opportunities, violations;
+let space; // The space of opportunities to violate a constraint
+let compliant; // The items that comply to the constraint
 
 // --- C0: Valid Level (Property vs. Ancestor Count) ---
-opportunities = $('element').filter(e => $(e).prop('Level') !== undefined);
-violations = opportunities.filter(e => parseInt($(e).prop('Level')) !== getAncestorCount($(e)));
-updateReport('C0', opportunities, violations);
+space = $('element');
+compliant = space.filter(e => parseInt($(e).prop('Level')) === getAncestorCount($(e)));
+updateReport('C0', space, compliant);
 
 
 // --- C1: Unique Parent ---
-opportunities = $('element').filter(e => getAncestorCount($(e)) > 0); // Elements that should have a parent
-violations = $('element').filter(e => $(e).inRels('composition-relationship').size() > 1);
-updateReport('C1', opportunities, violations);
+space = $('element').filter(e => getAncestorCount($(e)) > 0); // Elements having a parent
+compliant = space.filter(e => $(e).inRels('composition-relationship').size() < 2);
+updateReport('C1', space, compliant);
 
 
 // --- C2: Acyclicity ---
-opportunities = $('element');
-violations = opportunities.filter(e => isOwnAncestor($(e)));
-updateReport('C2', opportunities, violations);
+space = $('element').filter(e => getAncestorCount($(e)) > 0); // Elements having a parent
+compliant = space.filter(e => !isOwnAncestor($(e)));
+updateReport('C2', space, compliant);
 
 
 // --- C3: Consistent Refinement Depth (Leaf Violation Density) ---
-opportunities = $('element').filter(e => $(e).outRels('composition-relationship').size() === 0);
-const leafElements = opportunities.filter(e => $(e).prop('Level') !== '0'); 
-const totalLeavesToMeasure = leafElements.size();
+space = $('element').filter(e => isLeafElement($(e)));
 
-if (totalLeavesToMeasure === 0) {
-    updateReport('C3', 0, 0); 
-} else {
-    const depthCounts = {};
-    leafElements.each(e => {
-        const level = $(e).prop('Level');
-        depthCounts[level] = (depthCounts[level] || 0) + 1;
-    });
+const depthCounts = {};
+space.each(e => {
+    const level = $(e).prop('Level');
+    depthCounts[level] = (depthCounts[level] || 0) + 1;
+});
 
-    let maxCount = 0;
-    let dominantDepth = null;
-    for (const level in depthCounts) {
-        if (depthCounts[level] > maxCount) {
-            maxCount = depthCounts[level];
-            dominantDepth = level;
-        }
+let maxCount = 0;
+let dominantDepth = null;
+for (const level in depthCounts) {
+    if (depthCounts[level] > maxCount) {
+        maxCount = depthCounts[level];
+        dominantDepth = level;
     }
-
-    violations = leafElements.filter(e => $(e).prop('Level') !== dominantDepth);
-    updateReport('C3', totalLeavesToMeasure, violations);
 }
+
+compliant = space.filter(e => $(e).prop('Level') === dominantDepth);
+updateReport('C3', space, compliant);
 
 
 // --- C4: Upward Coherence ---
-// opportunities: Alle niet-hiërarchische relaties tussen elementen die zelf kinderen zijn (hebben een parent)
-opportunities = $('relation').not('composition-relationship').filter(r =>
-    getAncestorCount($(r.source)) > 0 && getAncestorCount($(r.target)) > 0);
+// opportunity space: Alle niet-hiërarchische relaties tussen elementen die zelf kinderen zijn (hebben een parent)
+space = $('relation').not('composition-relationship').filter(r =>
+    getAncestorCount($(r.source)) > 0 || getAncestorCount($(r.target)) > 0); // Top-level relations have no opporunity for violation
 
-// violations: Relaties waar de ouders NIET direct met dezelfde relatie verbonden zijn.
-violations = opportunities.filter(r => {
-    const sourceParent = $(r.source).inRels('composition-relationship').sourceEnds().first();
-    const targetParent = $(r.target).inRels('composition-relationship').sourceEnds().first();
+// compliant: Relaties waar de ouders direct met dezelfde relatie verbonden zijn, of waar de ouders gelijk zijn, of waarde ouders capabilities in dezelfde waardestroom zijn.
+compliant = space.filter(r => {
+    const sourceTopVSIDs = getDirectlySupportedTopValueStreams($(r.source));
+    const targetTopVSIDs = getDirectlySupportedTopValueStreams($(r.target));
+    const sameValueStream = Array.from(sourceTopVSIDs).some(sourceID => targetTopVSIDs.has(sourceID));
+    if (sameValueStream) return true; // Support/serving relationships between primary capabilities within the same value stream are left implicit
 
-    // 1. Veiligheidscheck (zou niet mogen falen door de opportuniteitsfilter)
-    if (!sourceParent || !targetParent) return false; 
+    const sourceParent = getParent($(r.source));
+    const targetParent = getParent($(r.target));
+    if (sourceParent.id === targetParent.id) return true; // No need for reflexive relations
     
-    // 2. CRUCIALE EXCLUSIE: Als de ouders hetzelfde zijn, is de regel voldaan.
-    // Geen noodzaak voor een reflexieve relatie.
-    if (sourceParent.id === targetParent.id) return false; 
-    
-    // 3. De eigenlijke C4-check: Controleer of de parent-relatie van type r.type bestaat.
     const parentRelExists = $(sourceParent).outRels(r.type).targetEnds().filter(tp => tp.id === targetParent.id).size() > 0;
     
-    return !parentRelExists;
+    return parentRelExists;
 });
-updateReport('C4', opportunities, violations);
+updateReport('C4', space, compliant);
 
 // --- C5: Downward Coherence ---
-// opportunities: Alle niet-hiërarchische relaties tussen elementen die zelf ouders zijn (hebben kinderen)
-opportunities = $('relation').not('composition-relationship').filter(r =>
-    $(r.source).outRels('composition-relationship').size() > 0
-    && $(r.target).outRels('composition-relationship').size() > 0);
+// violation opportunity space: Alle niet-hiërarchische relaties die zich niet op het diepste niveau bevinden
+space = $('relation').not('composition-relationship').filter(r =>
+    getChildren($(r.source)).size() > 0
+    || getChildren($(r.target)).size() > 0);
 
-// violations: Relaties waar de kinderen NIET verbonden zijn.
-violations = opportunities.filter(r => {
-    const sourceChildren = $(r.source).outRels('composition-relationship').targetEnds();
-    const targetChildren = $(r.target).outRels('composition-relationship').targetEnds();
+compliant = space.filter(r => {
+    const sourceChildren = getChildren($(r.source));
+    const targetChildren = getChildren($(r.target));
     
     // Zoek of er ten minste één relatie van type r.type van een sourceChild naar een targetChild gaat.
     const numberOfChildRels = sourceChildren.outRels(r.type).targetEnds().filter(tc => 
         targetChildren.filter(ttc => ttc.id === tc.id).size() > 0
     ).size();
     
-    return numberOfChildRels === 0; // Als er GEEN ENKELE relatie tussen de kinderen bestaat.
+    return numberOfChildRels > 0;
 });
-updateReport('C5', opportunities, violations);
+updateReport('C5', space, compliant);
 
 
 // --- C6: Capability Impact (Capability -> Object) ---
-opportunities = $('capability');
-violations = opportunities.filter(e => $(e).outRels('association-relationship').targetEnds('business-object').size() < 1);
-updateReport('C6', opportunities, violations);
+space = $('capability');
+compliant = space.filter(e => {
+    let businessObjects = $(e).outRels('association-relationship').targetEnds('business-object').size();
+    if (isLeafElement($(e))) {
+        return businessObjects > 0;
+    } else {
+        return businessObjects === 1;
+    }
+});
+updateReport('C6', space, compliant);
 
 
 // --- C7: Object Relevance (Object <- Capability) ---
-opportunities = $('business-object');
-violations = opportunities.filter(e => $(e).inRels('association-relationship').sourceEnds('capability').size() < 1);
-updateReport('C7', opportunities, violations);
+space = $('business-object');
+compliant = space.filter(e => {
+    let capabilities = $(e).inRels('association-relationship').sourceEnds('capability').size();
+    if (isLeafElement($(e))) {
+        return capabilities > 0;
+    } else {
+        return capabilities === 1;
+    }
+});
+updateReport('C7', space, compliant);
 
 
 // --- C8: Capability Purpose (Transitive Reachability) ---
-opportunities = $('capability');
-violations = opportunities.filter(e => !supportsValueStream($(e)));
-updateReport('C8', opportunities, violations);
+space = $('capability');
+compliant = space.filter(e => supportsValueStream($(e)));
+updateReport('C8', space, compliant);
 
 
 // --- C9: Traceability (Exactly One Realizer for Stages) ---
-opportunities = $('value-stream');
-violations = opportunities.filter(e => $(e).inRels('serving-relationship').sourceEnds('capability').size() !== 1);
-updateReport('C9', opportunities, violations);
+space = $('value-stream');
+compliant = space.filter(e => $(e).inRels('serving-relationship').sourceEnds('capability').size() === 1);
+updateReport('C9', space, compliant);
+
+/**
+ * Helper function to check if an element is at the deepest, 'leaf' level of its hierarchy.
+ * @param {jArchiCollection} element 
+ * @returns {boolean}
+ */
+function isLeafElement(element) {
+    // Een element is een 'blad' als het geen Composition uitgaande relaties heeft
+    return element.outRels('composition-relationship').size() === 0;
+}
 
 
 // ====================================================================
 // CONSOLE OUTPUT
 // ====================================================================
 
-// Functie voor de totale kansen is nodig omdat de sommatie in updateReport te complex is
-const getTotalOpportunities = () => {
-    // Totalen zijn al berekend in de summary. We corrigeren alleen voor C0/C1/C2/C3 die we niet in de totale metriek willen.
-    // De 'Total Violations' zijn de teller. De kans is de som van de kansen van de 6 aligneringsregels (C4-C9)
-    const alignmentOpportunityKeys = ['C4', 'C5', 'C6', 'C7', 'C8', 'C9'];
-    return alignmentOpportunityKeys.reduce((sum, key) => sum + report.rules[key].opportunityCount, 0);
-}
+const totalViolationOpportunities = Object.values(report.rules).reduce((sum, rule) => sum + rule.opportunityCount, 0);
+const totalViolations = Object.values(report.rules).reduce((sum, rule) => sum + rule.violationCount, 0);
 
-const totalAlignmentOpportunities = getTotalOpportunities();
-const totalViolations = report.summary.violationCount; // Dit is de som van alle individuele overtredingen
-
+const coherenceViolationOpportunities = Object.values(report.rules).reduce((sum, rule) => rule.coherence ? sum + rule.opportunityCount : 0, 0);
+const coherenceViolations = Object.values(report.rules).reduce((sum, rule) => rule.coherence ? sum + rule.violationCount : 0, 0);
 
 console.clear();
 console.show();
@@ -357,8 +382,7 @@ console.log();
 console.log('OVERALL STATUS: ' + (totalViolations > 0 ? 'FAILED' : 'PASSED'));
 console.log('');
 console.log('VALIDATION SUMMARY:');
-// Nu gebruiken we de totale kansen van de 6 alignment/coherence regels
-console.log(`  - Total Violations: ${totalViolations}/${totalAlignmentOpportunities} (${Math.round(totalViolations/totalAlignmentOpportunities * 10000) / 100}%)`);
+console.log(`  - Total Violations: ${totalViolations}/${totalViolationOpportunities} (${Math.round(totalViolations/totalViolationOpportunities * 10000) / 100}%)`);
 console.log('  - FAILED Rules: ' + (report.summary.rulesViolated.length > 0 ? report.summary.rulesViolated.join(', ') : 'None'));
 console.log('  - PASSED Rules: ' + (report.summary.rulesPassed.length > 0 ? report.summary.rulesPassed.join(', ') : 'None'));
 
@@ -375,7 +399,6 @@ if (totalViolations > 0) {
             console.log('----------------------------------------------------------------------');
             console.log(' * Statement: ' + val.statement);
             console.log(' * Rationale: ' + val.rationale);
-            // console.log(' * Suggested Fix: ' + val.fix); // No suggested fix, because we do not want to instruct the LLM at this stage.
             console.log(' * Examples of violating items: ');
             val.examples.forEach(ex => console.log('   - ' + ex));
         }
@@ -385,17 +408,29 @@ if (totalViolations > 0) {
 console.log();
 console.log('======================================================================');
 
+
 // Extra output for reporting, not to feed back to the LLM
 
-// Hulpfunctie om de top-level element-ID te vinden
-const getTopLevelId = (element) => {
-    let current = element;
-    while (true) {
-        const parent = current.inRels('composition-relationship').sourceEnds().first();
-        if (!parent) return current.first().id; 
-        current = $(parent); 
-    }
-};
+/**
+ * Calculates the total number of unique Top-Level (L0) Value Streams 
+ * a Capability influences (directly or indirectly).
+ * This is the mechanism for the Cross-Stream Utilization Index.
+ * 
+ * @param {JArchiCollection} capability - The single Capability element to start the search from.
+ * @returns {Set<string>} A Set of unique L0 Value Stream IDs.
+ */
+function getDirectlySupportedTopValueStreams(capability) {
+    const topStreamIDs = new Set(); 
+    
+    const valueStreams = capability.outRels('serving-relationship').targetEnds('value-stream');
+
+    valueStreams.each(vs => {
+        const topVSId = getRoot($(vs)).id;
+        if (topVSId) topStreamIDs.add(topVSId);
+    });
+
+    return topStreamIDs;
+}
 
 /**
  * Calculates the total number of unique Top-Level (L0) Value Streams 
@@ -405,11 +440,11 @@ const getTopLevelId = (element) => {
  * @param {JArchiCollection} startingCapability - The single Capability element to start the search from.
  * @returns {Set<string>} A Set of unique L0 Value Stream IDs.
  */
-function getTopValueStreams(startingCapability) {
+function getSupportedTopValueStreams(startingCapability) {
     // De queue is een Set/Array van element-wrappers
     const queue = toArray(startingCapability); 
     const visitedCapabilities = new Set(startingCapability.map(e => e.id));
-    const topStreams = new Set(); 
+    const topStreamIDs = new Set(); 
     
     while (queue.length > 0) {
         const currentCapability = $(queue.shift());
@@ -417,8 +452,8 @@ function getTopValueStreams(startingCapability) {
 
         // 1. DIRECTE INVLOED (BASE CASE)
         consumers.filter('value-stream').each(vs => {
-            const topVSId = getTopLevelId($(vs)); // Gebruik de correcte helper
-            if (topVSId) topStreams.add(topVSId);
+            const topVSId = getRoot($(vs)).id;
+            if (topVSId) topStreamIDs.add(topVSId);
         });
 
         // 2. INDIRECTE INVLOED (TRANSITIVE CLOSURE)
@@ -430,13 +465,13 @@ function getTopValueStreams(startingCapability) {
         });
     }
 
-    return topStreams; 
+    return topStreamIDs; 
 }
 
 const utilization = [];
 $('capability').each(e => {
-    const topVSCodes = getTopValueStreams($(e));
-    utilization.push(topVSCodes.size); // Gebruik .size op de Set
+    const topVSIDs = getSupportedTopValueStreams($(e));
+    utilization.push(topVSIDs.size);
 });
 const utilizationRate = utilization.reduce((a, b) => a + b, 0) / utilization.length;
 
@@ -445,7 +480,8 @@ $('element').each(e => levels.push($(e).prop('Level')));
 levels = Array.from(new Set(levels));
 
 console.log();
-console.log('Cross-Stream Utilization Index: ' + utilizationRate);
 console.log('Elements: ' + $('element').size());
 console.log('Relations: ' + $('relation').size());
 console.log('Levels: ' + levels);
+console.log(`Coherence Violations: ${coherenceViolations}/${coherenceViolationOpportunities} (${Math.round(coherenceViolations/coherenceViolationOpportunities * 10000) / 100}%)`);
+console.log('Cross-Stream Utilization Index: ' + Math.round(utilizationRate * 10) / 10);
