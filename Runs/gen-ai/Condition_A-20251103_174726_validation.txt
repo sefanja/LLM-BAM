@@ -1,0 +1,90 @@
+======================================================================
+          ARCHITECTURAL COHERENCE VALIDATION REPORT
+======================================================================
+
+OVERALL STATUS: FAILED
+
+VALIDATION SUMMARY:
+  - Total Violations: 172/492 (34.96%)
+  - FAILED Rules: C3, C4, C5, C6, C7, C8, C9
+  - PASSED Rules: C0, C1, C2
+
+NOTE: If C0, C1 or C2 fails, the results become unreliable.
+
+----------------------------------------------------------------------
+                   DETAILED VIOLATION ANALYSIS
+----------------------------------------------------------------------
+
+[!!] C3 - Consistent Refinement Depth: 35/71 (49.3%)
+----------------------------------------------------------------------
+ * Statement: All hierarchies must be 'balanced'. All leaf elements must exist at the same level of detail.
+ * Rationale: This prevents incomplete levels of detail, which create both structural gaps and semantic ambiguity. An unbalanced model leaves the meaning of its most detailed elements unclear, as their defining peer group is incomplete.
+ * Examples of violating items: 
+   - value-stream: Analyze Market & Academic Needs
+   - value-stream: Design Course & Program Structure
+   - value-stream: Secure Academic Approval
+
+[!!] C4 - Upward Coherence: 14/14 (100%)
+----------------------------------------------------------------------
+ * Statement: A non-hierarchical relationship between two elements requires a corresponding relationship between their parents (if any), with one exception: the relationship does not need to be propagated if the parent elements are both primary capabilities within the same top-level value stream.
+ * Rationale: undefined
+ * Examples of violating items: 
+   - serving-relationship: (Academic Program Management) --> (Define Curriculum)
+   - serving-relationship: (Academic Program Management) --> (Establish Delivery Resources)
+   - serving-relationship: (Research Management) --> (Define Research Strategy)
+
+[!!] C5 - Downward Coherence: 22/22 (100%)
+----------------------------------------------------------------------
+ * Statement: A relationship between two parent elements requires that at least one pair of their respective children is also related.
+ * Rationale: This ensures that high-level relationships are grounded in more detailed, concrete relations.
+ * Examples of violating items: 
+   - serving-relationship: (Academic Program Management) --> (Define Curriculum)
+   - serving-relationship: (Academic Program Management) --> (Establish Delivery Resources)
+   - serving-relationship: (Research Management) --> (Define Research Strategy)
+
+[!!] C6 - Capability Impact: 20/23 (86.96%)
+----------------------------------------------------------------------
+ * Statement: Each business capability must transform exactly one business object, with one exception: at the leaf level it may transform multiple objects.
+ * Rationale: This ensures that every capability has a well-defined, non-overlapping impact on value creation. The exception at the leaf-level prevents the model from having to use unnatural language not typically used by the business.
+ * Examples of violating items: 
+   - capability: Student Lifecycle Management
+   - capability: Research Management
+   - capability: Curriculum Design & Development
+
+[!!] C7 - Object Relevance: 21/23 (91.3%)
+----------------------------------------------------------------------
+ * Statement: Each business object must be transformed by exactly one business capability, with one exception: at the leaf level, an object may be transformed by multiple capabilities.
+ * Rationale: This ensures clear relevancy and accountability for the object in value-creating activities. The exception at the leaf-level prevents the modeler from having to identify overly detailed object lifecycle stages that would otherwise make the model unrecognizable.
+ * Examples of violating items: 
+   - business-object: Person
+   - business-object: Research Work
+   - business-object: Student Record
+
+[!!] C8 - Capability Purpose: 18/23 (78.26%)
+----------------------------------------------------------------------
+ * Statement: Each capability must either directly realize a value stream stage or support another capability that does.
+ * Rationale: This guarantees that all potential is ultimately linked to a value-creating purpose.
+ * Examples of violating items: 
+   - capability: Curriculum Design & Development
+   - capability: Academic Quality Assurance
+   - capability: Timetabling & Resource Scheduling
+
+[!!] C9 - Traceability: 42/52 (80.77%)
+----------------------------------------------------------------------
+ * Statement: Each value stream stage must be realized by exactly one capability.
+ * Rationale: This constraint ensures traceability and governability. It establishes a clear, unambiguous link from value-creating action back to the accountable capability.
+ * Examples of violating items: 
+   - value-stream: Develop Academic Program
+   - value-stream: Develop Research Capability
+   - value-stream: Deliver Education & Student Experience
+
+======================================================================
+
+
+
+EXTRA INFO (NOT FOR FEEDBACK TO LLM):
+ * Elements: 98
+ * Relations: 105
+ * Levels: 0, 1, 2
+ * Cross-Stream Utilization Index: 0.3
+ * Coherence Violations: 137/157 (87.26%)

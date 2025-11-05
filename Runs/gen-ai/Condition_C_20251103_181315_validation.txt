@@ -1,0 +1,42 @@
+======================================================================
+          ARCHITECTURAL COHERENCE VALIDATION REPORT
+======================================================================
+
+OVERALL STATUS: FAILED
+
+VALIDATION SUMMARY:
+  - Total Violations: 3/667 (0.45%)
+  - FAILED Rules: C4, C6
+  - PASSED Rules: C0, C1, C2, C3, C5, C7, C8, C9
+
+NOTE: If C0, C1 or C2 fails, the results become unreliable.
+
+----------------------------------------------------------------------
+                   DETAILED VIOLATION ANALYSIS
+----------------------------------------------------------------------
+
+[!!] C4 - Upward Coherence: 1/96 (1.04%)
+----------------------------------------------------------------------
+ * Statement: A non-hierarchical relationship between two elements requires a corresponding relationship between their parents (if any), with one exception: the relationship does not need to be propagated if the parent elements are both primary capabilities within the same top-level value stream.
+ * Rationale: undefined
+ * Examples of violating items: 
+   - serving-relationship: (Partner Relationship Management) --> (Grant & Proposal Development)
+
+[!!] C6 - Capability Impact: 2/27 (7.41%)
+----------------------------------------------------------------------
+ * Statement: Each business capability must transform exactly one business object, with one exception: at the leaf level it may transform multiple objects.
+ * Rationale: This ensures that every capability has a well-defined, non-overlapping impact on value creation. The exception at the leaf-level prevents the model from having to use unnatural language not typically used by the business.
+ * Examples of violating items: 
+   - capability: Partner Relationship Management
+   - capability: Research Ethics & Compliance Management
+
+======================================================================
+
+
+
+EXTRA INFO (NOT FOR FEEDBACK TO LLM):
+ * Elements: 112
+ * Relations: 207
+ * Levels: 0, 1, 2
+ * Cross-Stream Utilization Index: 1.6
+ * Coherence Violations: 3/260 (1.15%)

@@ -1,0 +1,67 @@
+======================================================================
+          ARCHITECTURAL COHERENCE VALIDATION REPORT
+======================================================================
+
+OVERALL STATUS: FAILED
+
+VALIDATION SUMMARY:
+  - Total Violations: 26/856 (3.04%)
+  - FAILED Rules: C4, C6, C7, C8, C9
+  - PASSED Rules: C0, C1, C2, C3, C5
+
+NOTE: If C0, C1 or C2 fails, the results become unreliable.
+
+----------------------------------------------------------------------
+                   DETAILED VIOLATION ANALYSIS
+----------------------------------------------------------------------
+
+[!!] C4 - Upward Coherence: 14/130 (10.77%)
+----------------------------------------------------------------------
+ * Statement: A non-hierarchical relationship between two elements requires a corresponding relationship between their parents (if any), with one exception: the relationship does not need to be propagated if the parent elements are both primary capabilities within the same top-level value stream.
+ * Rationale: undefined
+ * Examples of violating items: 
+   - association-relationship: (Academic Resource Planning) --> (Curriculum Specification)
+   - association-relationship: (Research Infrastructure Management) --> (Physical Asset Register)
+   - association-relationship: (Proposal & Grant Management) --> (Funder Profile)
+
+[!!] C6 - Capability Impact: 1/46 (2.17%)
+----------------------------------------------------------------------
+ * Statement: Each business capability must transform exactly one business object, with one exception: at the leaf level it may transform multiple objects.
+ * Rationale: This ensures that every capability has a well-defined, non-overlapping impact on value creation. The exception at the leaf-level prevents the model from having to use unnatural language not typically used by the business.
+ * Examples of violating items: 
+   - capability: Financial Management
+
+[!!] C7 - Object Relevance: 1/38 (2.63%)
+----------------------------------------------------------------------
+ * Statement: Each business object must be transformed by exactly one business capability, with one exception: at the leaf level, an object may be transformed by multiple capabilities.
+ * Rationale: This ensures clear relevancy and accountability for the object in value-creating activities. The exception at the leaf-level prevents the modeler from having to identify overly detailed object lifecycle stages that would otherwise make the model unrecognizable.
+ * Examples of violating items: 
+   - business-object: Asset Record
+
+[!!] C8 - Capability Purpose: 2/46 (4.35%)
+----------------------------------------------------------------------
+ * Statement: Each capability must either directly realize a value stream stage or support another capability that does.
+ * Rationale: This guarantees that all potential is ultimately linked to a value-creating purpose.
+ * Examples of violating items: 
+   - capability: Alumni & Donor Relations
+   - capability: Enterprise Systems Management
+
+[!!] C9 - Traceability: 8/57 (14.04%)
+----------------------------------------------------------------------
+ * Statement: Each value stream stage must be realized by exactly one capability.
+ * Rationale: This constraint ensures traceability and governability. It establishes a clear, unambiguous link from value-creating action back to the accountable capability.
+ * Examples of violating items: 
+   - value-stream: Prepare Learning Environments
+   - value-stream: Develop Core Facilities
+   - value-stream: Build Research Talent & Expertise
+
+======================================================================
+
+
+
+EXTRA INFO (NOT FOR FEEDBACK TO LLM):
+ * Elements: 141
+ * Relations: 270
+ * Levels: 0, 1, 2
+ * Cross-Stream Utilization Index: 1.7
+ * Coherence Violations: 26/362 (7.18%)

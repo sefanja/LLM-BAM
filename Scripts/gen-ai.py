@@ -3,6 +3,7 @@ from google import genai
 from google.genai import types
 import json
 import time
+import re
 
 # --- Setup en Client Init (Blijft hetzelfde) ---
 try:
@@ -81,6 +82,31 @@ def run_llm_experiment(prompt_name: str, prompt_text: str):
         with open(f"{base_filename}_prompt.md", "w", encoding="utf-8") as f:
             f.write(f"# Prompt for {prompt_name}\n\n```markdown\n{prompt_text}\n```\n")
 
+        # ---  CSV Extractie en Opslag ---
+        # Patroon om de inhoud tussen de ```csv ... ``` te vinden
+        # r'^```csv\n(.*?)\n```$' zoekt naar de start/end fences op hun eigen lijn
+        csv_contents = re.findall(
+            r'^```csv\n(.*?)\n```$', 
+            response.text, 
+            re.DOTALL | re.MULTILINE # DOTALL zorgt ervoor dat . ook newlines matcht
+        )
+        
+        # Geef de 3 CSV bestanden een duidelijke naam op basis van de verwachte inhoud
+        # 1. Elementen (VS, CAP, BO)
+        # 2. Relaties (Composition, Serving, Association)
+        # 3. Attributen/Metadata (Level, Code, Sequence, etc.)
+        csv_suffixes = ["_elements", "_relationships", "_attributes"]
+
+        if len(csv_contents) == 3:
+            for i, content in enumerate(csv_contents):
+                csv_filename = f"{base_filename}{csv_suffixes[i]}.csv"
+                with open(csv_filename, "w", encoding="utf-8") as f:
+                    # strip() om eventuele leading/trailing whitespace uit de extractie te verwijderen
+                    f.write(content.strip() + "\n") 
+                print(f"  Extracted CSV saved: {os.path.basename(csv_filename)}")
+        else:
+            # Belangrijke waarschuwing als het LLM zich niet aan het format houdt
+            print(f"WAARSCHUWING: Verwacht 3 CSV blokken, maar vond er {len(csv_contents)}. Geen afzonderlijke CSV's opgeslagen.")
 
         # --- Raw Response Archief (De Output) ---
         # Bevat de volledige, ruwe respons, inclusief de CSV's en eventuele thoughts.
@@ -93,7 +119,7 @@ def run_llm_experiment(prompt_name: str, prompt_text: str):
     except Exception as e:
         print(f"Fout tijdens API-call voor {prompt_name}: {e}")
 
-# --- Test Runs (Uw Experimentele Loop) ---
+# --- Test Run ---
 if __name__ == "__main__":
     # In een echt scenario leest u de prompts in vanuit bestanden (A.txt, B.txt, etc.)
 
@@ -107,10 +133,10 @@ if __name__ == "__main__":
             return None
 
     # VUL HIER UW ECHTE PROMPT BESTANDSNAAM IN
-    prompt = load_prompt("prompt_B+2.txt") 
+    prompt = load_prompt("prompt_C.txt") 
     
     if prompt:
-        run_llm_experiment("Condition_B+2", prompt)
+        run_llm_experiment("Condition_C", prompt)
     
     # Voor de B+ runs, moet u de output van de vorige run in de prompt injecteren
     # Dit moet u in een loop doen, zoals besproken.

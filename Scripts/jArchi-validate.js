@@ -2,15 +2,22 @@
 // ARCHITECTURAL COHERENCE VALIDATOR
 //======================================================================
 
+// Returns a string
 const getLevel = (obj) => $(obj).prop('Level');
 
+// Returns `null` if there is no parent
 const getParent = (obj) => $(obj).inRels('composition-relationship').sourceEnds().first();
 
+// Returns an empty collection of there are no children
 const getChildren = (obj) => $(obj).outRels('composition-relationship').targetEnds();
 
+// Returns nothing if the element is its own ancestor
 const getRoot = (obj) => {
     let current = obj;
-    while (true) {
+    const visited = new Set(); // prevent loops
+
+    while (!visited.has(current.id)) {
+        visited.add(current.id);
         const parent = getParent(current);
         if (!parent) return current;
         current = parent;
@@ -19,12 +26,13 @@ const getRoot = (obj) => {
 
 const isLeaf = (obj) => $(obj).outRels('composition-relationship').size() === 0;
 
-// Finds the number of ancestors for an element based on Composition relationships
 const getAncestorCount = (obj) => {
     let count = 0;
     let current = obj;
+    const visited = new Set(); // prevent loops
     
-    while (true) {
+    while (!visited.has(current.id)) {
+        visited.add(current.id);
         const parent = getParent(current);
         if (!parent) break;
         current = parent;
@@ -39,17 +47,17 @@ const isOwnAncestor = (obj) => {
     
     while (true) {
         const parent = getParent(current);
-        if (parent === undefined || parent === null) break;
+        if (!parent) break;
         if (parent.id === initialId) return true;
         current = parent;
     }
     return false;
 };
 
-// Checks if a capability (directly or transitively) supports a Value Stream. (C8)
+// Checks if a capability (directly or transitively) supports a Value Stream
 const supportsValueStream = (obj) => {
     const queue = [obj];
-    const visited = new Set([obj.id]);
+    const visited = new Set([obj.id]); // prevent loops
 
     while (queue.length > 0) {
         const currentCapability = queue.shift();
@@ -78,7 +86,12 @@ const supportsValueStream = (obj) => {
  */
 const getDirectlySupportedTopValueStreams = (obj) => {
     const valueStreams = $(obj).outRels('serving-relationship').targetEnds('value-stream');
-    return new Set(valueStreams.map(vs => getRoot(vs).id));
+    const topStreamIDs = new Set();
+    valueStreams.each(vs => {
+        const root = getRoot(vs);
+        if (root) topStreamIDs.add(root.id);
+    });
+    return topStreamIDs;
 };
 
 /**
@@ -87,7 +100,6 @@ const getDirectlySupportedTopValueStreams = (obj) => {
  * This is the mechanism for the Cross-Stream Utilization Index.
  */
 const getSupportedTopValueStreams = (startingCapability) => {
-    // De queue is een Set/Array van element-wrappers
     const queue = [startingCapability];
     const visitedCapabilities = new Set([startingCapability.id]);
     const topStreamIDs = new Set(); 
@@ -97,7 +109,10 @@ const getSupportedTopValueStreams = (startingCapability) => {
         const consumers = $(currentCapability).outRels('serving-relationship').targetEnds();
 
         // 1. DIRECTE INVLOED (BASE CASE)
-        consumers.filter('value-stream').each(vs => topStreamIDs.add(getRoot(vs).id));
+        consumers.filter('value-stream').each(vs => {
+            const root = getRoot(vs);
+            if (root) topStreamIDs.add(root.id);
+        });
 
         // 2. INDIRECTE INVLOED (TRANSITIVE CLOSURE)
         consumers.filter('capability').each(dependentCap => {
@@ -137,7 +152,7 @@ const report = {
             name: 'Valid Level',
             statement: 'Each element must be assigned a level that corresponds to its number of ancestors.',
             rationale: "A correct 'Level' property for each element makes it easier to validate the model.",
-            coherence: false // false if the rule concerns only one element type, true if it concerns coherence between submodels
+            type: false // false if the rule concerns only one element type, true if it concerns coherence between submodels
             // Added later: opportunityCount, violationCount, examples
         },
         C1: {
@@ -262,7 +277,6 @@ updateReport('C3', space, compliant);
 
 
 // --- C4: Upward Coherence ---
-// opportunity space: Alle niet-hiërarchische relaties tussen elementen die zelf kinderen zijn (hebben een parent)
 space = $('relation').not('composition-relationship').filter(r =>
     getAncestorCount(r.source) > 0 || getAncestorCount(r.target) > 0); // Top-level relations have no opporunity for violation
 
@@ -285,10 +299,9 @@ compliant = space.filter(r => {
 updateReport('C4', space, compliant);
 
 // --- C5: Downward Coherence ---
-// violation opportunity space: Alle niet-hiërarchische relaties die zich niet op het diepste niveau bevinden
 space = $('relation').not('composition-relationship').filter(r =>
     getChildren(r.source).size() > 0
-    || getChildren(r.target).size() > 0);
+    || getChildren(r.target).size() > 0); // Bottom-level relations have no opporunity for violation
 
 compliant = space.filter(r => {
     const sourceChildren = getChildren(r.source);
@@ -359,6 +372,8 @@ console.log('VALIDATION SUMMARY:');
 console.log(`  - Total Violations: ${totalViolations}/${totalViolationOpportunities} (${Math.round(totalViolations/totalViolationOpportunities * 10000) / 100}%)`);
 console.log('  - FAILED Rules: ' + (report.summary.rulesViolated.length > 0 ? report.summary.rulesViolated.join(', ') : 'None'));
 console.log('  - PASSED Rules: ' + (report.summary.rulesPassed.length > 0 ? report.summary.rulesPassed.join(', ') : 'None'));
+console.log();
+console.log('NOTE: If C0, C1 or C2 fails, the results become unreliable.')
 
 if (totalViolations > 0) {
     console.log();
